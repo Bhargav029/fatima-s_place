@@ -2,26 +2,101 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Plus, Minus, Trash2, CreditCard, Truck, Info, 
-  ChevronRight, Smartphone, MapPin, CheckCircle2, PlusCircle, Palmtree, Instagram, Facebook, Twitter, Mail, Phone 
+  ChevronRight, Smartphone, MapPin, CheckCircle2, PlusCircle, Palmtree, Instagram, Facebook, Twitter, Mail, Phone, X
 } from 'lucide-react';
 import NavbarMain from "../components/NavbarMain";
 import { useCart } from '../context/CartContext';
 
 const Checkout = () => {
   const { cartItems, addToCart, removeFromCart, subtotal } = useCart();
+  
+  // States for Checkout logic
   const [paymentMethod, setPaymentMethod] = useState('upi');
-  const [selectedAddress, setSelectedAddress] = useState('home');
+  const [addresses, setAddresses] = useState([]); // Array to store user's addresses
+  const [selectedAddressId, setSelectedAddressId] = useState(null); // Which address is selected
+  
+  // States for the Modal
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState({ type: 'Home', text: '', pincode: '' });
 
   // Calculations
   const gst = Math.round(subtotal * 0.18);
   const packagingCharges = subtotal > 0 ? 20 : 0;
-  // Free delivery if order is over ₹1500!
   const deliveryFee = subtotal > 1500 ? 0 : (subtotal > 0 ? 45 : 0);
   const total = subtotal + gst + deliveryFee + packagingCharges;
 
+  // Handle saving the new address
+  const handleSaveAddress = (e) => {
+    e.preventDefault();
+    const newId = Date.now().toString(); // Generate a unique ID
+    const addressObject = { id: newId, ...newAddress };
+    
+    setAddresses([...addresses, addressObject]); // Add to list
+    setSelectedAddressId(newId); // Auto-select the newly created address
+    setShowAddressModal(false); // Close modal
+    setNewAddress({ type: 'Home', text: '', pincode: '' }); // Reset form
+  };
+
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col relative">
       <NavbarMain />
+
+      {/* --- ADDRESS MODAL POPUP --- */}
+      {showAddressModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-gray-900">Add New Address</h3>
+              <button onClick={() => setShowAddressModal(false)} className="p-2 bg-gray-50 text-gray-400 rounded-full hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveAddress} className="space-y-5">
+              {/* Address Type Selector */}
+              <div className="flex gap-2 p-1 bg-gray-50 rounded-xl border border-gray-100">
+                {['Home', 'Work', 'Other'].map(type => (
+                  <button 
+                    key={type} type="button" 
+                    onClick={() => setNewAddress({...newAddress, type})}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${newAddress.type === type ? 'bg-white text-[#6b75f2] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
+              {/* Full Address Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-gray-500 ml-1">Complete Address</label>
+                <textarea 
+                  required rows="3"
+                  placeholder="House/Flat No., Building Name, Street, Landmark"
+                  value={newAddress.text}
+                  onChange={(e) => setNewAddress({...newAddress, text: e.target.value})}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 text-sm focus:border-[#6b75f2] focus:bg-white outline-none transition-colors resize-none"
+                />
+              </div>
+
+              {/* Pincode */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-gray-500 ml-1">Pincode</label>
+                <input 
+                  required type="text" maxLength="6"
+                  placeholder="e.g. 403516"
+                  value={newAddress.pincode}
+                  onChange={(e) => setNewAddress({...newAddress, pincode: e.target.value.replace(/\D/g, '')})}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-[#6b75f2] focus:bg-white outline-none transition-colors"
+                />
+              </div>
+
+              <button type="submit" className="w-full bg-[#6b75f2] text-white py-3.5 rounded-xl font-bold hover:bg-[#5a64e1] transition-colors mt-2">
+                Save Address
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-6 py-10 flex-grow w-full">
         {/* Header Section */}
@@ -93,13 +168,6 @@ const Checkout = () => {
                   </div>
                 )}
               </div>
-
-              <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 flex gap-4 items-start">
-                <Info className="text-[#6b75f2] shrink-0" size={20} />
-                <p className="text-[13px] text-gray-500 leading-relaxed">
-                  Goan food is best enjoyed fresh! We use eco-friendly sustainable packaging for all our coastal deliveries.
-                </p>
-              </div>
             </div>
 
             {/* STEP 2: DELIVERY ADDRESS */}
@@ -110,50 +178,39 @@ const Checkout = () => {
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Home Address Card */}
-                <div 
-                  onClick={() => setSelectedAddress('home')}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col ${selectedAddress === 'home' ? 'border-[#6b75f2] bg-indigo-50/10' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={16} className={selectedAddress === 'home' ? 'text-[#6b75f2]' : 'text-gray-500'} />
-                      <span className="font-bold text-gray-900 text-sm">Home</span>
+                
+                {/* Dynamically Render User Addresses */}
+                {addresses.map((addr) => (
+                  <div 
+                    key={addr.id}
+                    onClick={() => setSelectedAddressId(addr.id)}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col ${selectedAddressId === addr.id ? 'border-[#6b75f2] bg-indigo-50/10 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={16} className={selectedAddressId === addr.id ? 'text-[#6b75f2]' : 'text-gray-500'} />
+                        <span className="font-bold text-gray-900 text-sm">{addr.type}</span>
+                      </div>
+                      {selectedAddressId === addr.id && <CheckCircle2 size={18} className="text-[#6b75f2]" />}
                     </div>
-                    {selectedAddress === 'home' && <CheckCircle2 size={18} className="text-[#6b75f2]" />}
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-4 flex-grow">
-                    B-402, Sea Breeze Apartments, Calangute, Goa - 403516
-                  </p>
-                  <div className="text-right mt-auto">
-                    <button className="text-[#6b75f2] text-xs font-bold hover:underline">Edit Details</button>
-                  </div>
-                </div>
-
-                {/* Work Address Card */}
-                <div 
-                  onClick={() => setSelectedAddress('work')}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col ${selectedAddress === 'work' ? 'border-[#6b75f2] bg-indigo-50/10' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={16} className={selectedAddress === 'work' ? 'text-[#6b75f2]' : 'text-gray-500'} />
-                      <span className="font-bold text-gray-900 text-sm">Work</span>
+                    <p className="text-xs text-gray-500 leading-relaxed mb-2 flex-grow">
+                      {addr.text}
+                    </p>
+                    <p className="text-xs font-bold text-gray-400 mb-4">Pincode: {addr.pincode}</p>
+                    <div className="text-right mt-auto">
+                      <button className="text-[#6b75f2] text-[11px] font-bold hover:underline">Edit Details</button>
                     </div>
-                    {selectedAddress === 'work' && <CheckCircle2 size={18} className="text-[#6b75f2]" />}
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-4 flex-grow">
-                    Flat 402, Green Valley Apartments, Mapusa Goa 403507
-                  </p>
-                  <div className="text-right mt-auto">
-                    <button className="text-[#6b75f2] text-xs font-bold hover:underline">Edit Details</button>
-                  </div>
-                </div>
+                ))}
 
-                {/* Add New Address */}
-                <div className="p-5 rounded-2xl border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors min-h-[140px] md:col-span-2 lg:col-span-1">
-                  <PlusCircle size={24} className="text-gray-400 mb-2" />
-                  <span className="text-sm font-bold text-gray-500">Add New Address</span>
+                {/* Add New Address Button */}
+                <div 
+                  onClick={() => setShowAddressModal(true)}
+                  className={`p-5 rounded-2xl border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-colors min-h-[140px] ${addresses.length === 0 ? 'md:col-span-2 py-12' : ''}`}
+                >
+                  <PlusCircle size={24} className="text-[#6b75f2] mb-3" />
+                  <span className="text-sm font-bold text-gray-700">Add New Address</span>
+                  {addresses.length === 0 && <span className="text-xs text-gray-400 mt-1">Please add an address to continue</span>}
                 </div>
               </div>
             </div>
@@ -241,11 +298,13 @@ const Checkout = () => {
                 </div>
               )}
 
+              {/* Confirm Order Button - Disabled if no address is selected! */}
               <button 
-                disabled={cartItems.length === 0}
-                className="w-full bg-[#6b75f2] text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#5a64e1] disabled:opacity-50 transition-all flex items-center justify-center gap-2 mb-4"
+                disabled={cartItems.length === 0 || !selectedAddressId}
+                title={!selectedAddressId ? "Please add a delivery address" : ""}
+                className="w-full bg-[#6b75f2] text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#5a64e1] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mb-4"
               >
-                Confirm Order <ChevronRight size={18} />
+                {!selectedAddressId ? "Select Address to Continue" : "Confirm Order"} <ChevronRight size={18} />
               </button>
 
               <p className="text-[9px] text-gray-400 text-center leading-relaxed">
