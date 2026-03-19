@@ -1,18 +1,28 @@
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
+import Login from './pages/Login';
 import Checkout from './pages/Checkout';
-import Login from './pages/Login'; // Import the Login page
 import Settings from './pages/Settings';
+import AdminDashboard from './pages/AdminDashboard'; 
+import ProtectedRoute from './components/ProtectedRoute'; 
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/menu" element={<Menu />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/checkout" element={<Checkout />} />
-      <Route path="/login" element={<Login />} /> {/* Add this route */}
-      <Route path="/settings" element={<Settings />} /> {/* Add this route */}
+      <Route path="/settings" element={<Settings />} />
+      
+      {/* Protect the Admin route so only Admins can access it */}
+      <Route path="/admin" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminDashboard />
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }

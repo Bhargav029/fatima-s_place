@@ -1,37 +1,36 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // 1. Initialize user from localStorage so they stay logged in on refresh
+  // Initialize from localStorage to persist login across refreshes
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('fatimas_user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // 2. Login function: accepts a userData object { name, email, phone }
+  // Login function: accepts a full userData object { name, email, phone, role }
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem('fatimas_user', JSON.stringify(userData));
   };
 
-  // 3. Logout function: clears state and storage
   const logout = () => {
     setUser(null);
     localStorage.removeItem('fatimas_user');
   };
 
-  // 4. Helper boolean for quick checks
+  // Helper booleans for easy checking in your components
   const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'admin'; 
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isAdmin, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook for easy access
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

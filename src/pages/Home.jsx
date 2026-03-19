@@ -27,6 +27,7 @@ function Home() {
     { 
       image: biryani, 
       name: "Biryani", 
+      desc: "A fragrant and flavorful rice dish layered with marinated meat, caramelized onions, and aromatic spices, slow-cooked to perfection.",
       price: 230, 
       rating: 5 
     },
