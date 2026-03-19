@@ -82,7 +82,7 @@ ${itemRows}
         <div className="w-1/3 hidden md:block"></div>
         <div className="flex items-center gap-2 justify-center w-full md:w-1/3">
           <div className="w-8 h-8 bg-[#6b75f2] rounded-full flex items-center justify-center text-white shadow-sm">
-            <UtensilsCrossed size={16} />
+            <Palmtree size={16} />
           </div>
           <span className="font-extrabold text-xl text-gray-900 hidden sm:block">Fatima's Place Checkout</span>
         </div>

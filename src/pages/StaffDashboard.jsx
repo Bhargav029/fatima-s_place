@@ -6,7 +6,10 @@ import {
   MapPin, Navigation, Phone, CheckCircle, Palmtree, LogOut, Sun, Moon,UtensilsCrossed,ChevronRight,
   LayoutGrid, Clock, Truck, Plus, Bell, CheckSquare, Square, AlertCircle, Check, User, ChefHat, Flame
 } from 'lucide-react';
-import { io } from 'socket.io-client';
+
+// --- NEW: FIREBASE IMPORTS INSTEAD OF SOCKET.IO ---
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase'; // This assumes your firebase.js config file is in the src folder
 
 const StaffDashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -18,18 +21,11 @@ const StaffDashboard = () => {
   // --- DELIVERY STATE ---
   const [isDelivering, setIsDelivering] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
-  const [socket, setSocket] = useState(null);
   const [watchId, setWatchId] = useState(null);
 
   const activeOrder = {
     id: "F-92841", customer: "John Doe", address: "Villa 4, Sunset Blvd, Vagator", phone: "+91 98765 43210",
   };
-
-  useEffect(() => {
-    const newSocket = io('http://localhost:4000'); 
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
-  }, []);
 
   const toggleDeliveryStatus = () => {
     if (isDelivering) {
@@ -41,10 +37,22 @@ const StaffDashboard = () => {
       if (!navigator.geolocation) return alert("Geolocation is not supported by your browser");
       setIsDelivering(true);
       const id = navigator.geolocation.watchPosition(
-        (position) => {
+        async (position) => {
           const newLocation = [position.coords.latitude, position.coords.longitude];
           setCurrentLocation(newLocation);
-          if (socket) socket.emit('driverLocationUpdate', newLocation);
+          
+          // --- NEW: PUSH GPS DATA TO FIREBASE CLOUD ---
+          try {
+            // Save to 'deliveries' collection, using the order ID as the document name
+            await setDoc(doc(db, "deliveries", activeOrder.id), {
+              coords: newLocation,
+              driverName: user?.name || 'Fatima Staff', 
+              phone: user?.phone || '+91 987 654 3210',
+              lastUpdated: new Date().toISOString()
+            });
+          } catch (error) {
+            console.error("Error updating location in Firebase:", error);
+          }
         },
         (error) => {
           alert("Please enable GPS permissions to start delivery.");
@@ -127,7 +135,6 @@ const StaffDashboard = () => {
     if (currentStatus === 'Pending') {
       setKitchenTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: 'Cooking' } : t));
     } else if (currentStatus === 'Cooking') {
-      // If marked ready, remove it from the board (or move to a "Done" list)
       setKitchenTickets(prev => prev.filter(t => t.id !== ticketId));
     }
   };
@@ -420,7 +427,7 @@ const StaffDashboard = () => {
             </div>
           )}
 
-          {/* --- TAB 3: DELIVERIES (The Old Driver Dashboard logic) --- */}
+          {/* --- TAB 3: DELIVERIES --- */}
           {activeTab === 'Deliveries' && (
             <div className="max-w-md mx-auto animate-in fade-in duration-300 pt-10">
               <div className="bg-white dark:bg-[#16171d] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 text-center">

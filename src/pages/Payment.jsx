@@ -6,7 +6,10 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { io } from 'socket.io-client';
+
+// --- NEW: FIREBASE IMPORTS ---
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase'; // Ensure your firebase.js config is correct
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -38,27 +41,38 @@ const Payment = () => {
   const deliveryFee = orderType === 'dine-in' ? 0 : (subtotal > 1500 ? 0 : (subtotal > 0 ? 45 : 0));
   const finalTotal = subtotal + gst + deliveryFee + packagingCharges;
 
+  // --- NEW: SAVE ORDER TO FIREBASE FUNCTION ---
+  const saveOrderToFirebase = async (orderData) => {
+    try {
+      // Saves the new order to a collection called "orders"
+      await setDoc(doc(db, "orders", orderData.id), {
+        ...orderData,
+        createdAt: new Date().toISOString(),
+        cartItems: cartItems // Save the actual items so the kitchen sees them!
+      });
+    } catch (error) {
+      console.error("Error saving order to Firebase: ", error);
+    }
+  };
+
   const handleCompletePayment = async (e) => {
     if (e) e.preventDefault();
     setIsProcessing(true);
 
     const orderData = {
-      id: `ORD-${Math.floor(Math.random() * 10000)}`,
+      id: `F-${Math.floor(10000 + Math.random() * 90000)}`, // Generates an ID like F-92841
       customer: user?.name || 'Guest Customer',
       items: `${cartItems.length} items`,
       status: 'Pending',
       amount: `₹${finalTotal}`,
       type: orderType === 'delivery' ? 'Delivery' : `Dine-In (T-${tableNumber})`,
-      agent: orderType === 'delivery' ? 'Assign Courier' : 'Server',
-      time: 'Just now'
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
     };
 
     // --- IF CASH ON DELIVERY / PAY AT COUNTER ---
     if (paymentMethod === 'cod') {
-      const socket = io('http://localhost:4000');
-      socket.emit('newOrder', orderData);
+      await saveOrderToFirebase(orderData); // Save to cloud!
       
-      // We pass paymentMethod: 'cod' to the success page!
       navigate('/payment-success', { 
         state: { orderData, orderType, cartItems, subtotal, deliveryFee, finalTotal, paymentMethod: 'cod' } 
       });
@@ -76,6 +90,8 @@ const Payment = () => {
     }
 
     try {
+      // NOTE: You STILL need your Node.js backend running for this part! 
+      // Razorpay requires a secure backend to generate the order ID.
       const fetchOrder = await fetch('http://localhost:4000/create-razorpay-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,10 +114,8 @@ const Payment = () => {
           });
           
           if (verifyRes.ok) {
-            const socket = io('http://localhost:4000');
-            socket.emit('newOrder', orderData);
+            await saveOrderToFirebase(orderData); // Save to cloud!
             
-            // We pass paymentMethod: 'online' to the success page!
             navigate('/payment-success', { 
               state: { orderData, orderType, cartItems, subtotal, deliveryFee, finalTotal, paymentMethod: 'online' } 
             });
