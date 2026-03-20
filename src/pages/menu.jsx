@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Plus, Minus, ShoppingBag, Filter, ArrowRight, Palmtree,
-  Leaf, Info, PlusCircle, Instagram, Facebook, Twitter, MapPin, Phone, Mail 
+  Leaf, Info, PlusCircle, Instagram, Facebook, Twitter, MapPin, Phone, Mail ,UtensilsCrossed 
 } from 'lucide-react';
 import NavbarMain from "../components/NavbarMain";
 import { useCart } from '../context/CartContext'; 
@@ -194,28 +194,57 @@ const Menu = () => {
         </aside>
       </main>
 
-      <footer className="bg-gray-50 dark:bg-[#0a0b10] border-t dark:border-gray-800 pt-20 pb-10">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 justify-center md:justify-start">
-               <Palmtree className="text-[#6b75f2]" /> <span className="font-bold text-indigo-600 dark:text-[#6b75f2]">Fatima's Place</span>
+    <footer className="bg-gray-50 dark:bg-[#08090d] pt-20 pb-10 px-6 md:px-20 border-t border-gray-100 dark:border-gray-900 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-[#6b75f2] rounded-full flex items-center justify-center text-white"><UtensilsCrossed size={16} /></div>
+              <span className="text-xl font-bold text-indigo-600 dark:text-[#6b75f2]">Fatima's Place</span>
             </div>
-            <p className="text-xs text-gray-400">Authentic Goan flavors since 1998.</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Experience the heart of Goa with every bite. Authentic flavors, coastal vibes, and warm hospitality since 1998.</p>
+            <div className="flex gap-4 text-gray-400 dark:text-gray-500">
+              <Instagram size={20} className="hover:text-indigo-600 dark:hover:text-[#6b75f2] cursor-pointer" />
+              <Facebook size={20} className="hover:text-indigo-600 dark:hover:text-[#6b75f2] cursor-pointer" />
+              <Twitter size={20} className="hover:text-indigo-600 dark:hover:text-[#6b75f2] cursor-pointer" />
+            </div>
           </div>
+
           <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-4">Explore</h4>
-            <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-2"><li>Menu</li><li>Reservations</li></ul>
+            <h4 className="font-bold text-gray-900 dark:text-white mb-6">Explore</h4>
+            <ul className="space-y-4 text-gray-500 dark:text-gray-400 text-sm">
+              <li><Link to="/menu" className="hover:text-indigo-600 dark:hover:text-[#6b75f2] cursor-pointer">Menu</Link></li>
+              <li><Link to="/reservations" className="hover:text-indigo-600 dark:hover:text-[#6b75f2] cursor-pointer">Reservations</Link></li>
+              <li><Link to="/offers" className="hover:text-indigo-600 dark:hover:text-[#6b75f2] cursor-pointer">Special Offers</Link></li>
+              <li><Link to="/contact" className="hover:text-indigo-600 dark:hover:text-[#6b75f2] cursor-pointer">Contact Us</Link></li>
+            </ul>
           </div>
+
           <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-4">Contact</h4>
-            <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-2"><li>Calangute, North Goa</li><li>+91 987 654 3210</li></ul>
+            <h4 className="font-bold text-gray-900 dark:text-white mb-6">Contact</h4>
+            <ul className="space-y-4 text-gray-500 dark:text-gray-400 text-sm">
+              <li className="flex items-start gap-3"><MapPin size={18} className="text-indigo-400 dark:text-indigo-500 shrink-0" /> Resort, Small,Rd,Opp Leaney , Dmello Vaddo ,Vagator,Goa 403509</li>
+              <li className="flex items-center gap-3"><Phone size={18} className="text-indigo-400 dark:text-indigo-500 shrink-0" /> +91 987 654 3210</li>
+              <li className="flex items-center gap-3"><Mail size={18} className="text-indigo-400 dark:text-indigo-500 shrink-0" /> hello@fatimasplace.com</li>
+            </ul>
           </div>
+
           <div>
-             <h4 className="font-bold text-gray-900 dark:text-white mb-4">Newsletter</h4>
-             <div className="flex gap-2">
-               <input className="border dark:border-gray-800 bg-white dark:bg-gray-900 rounded p-2 w-full text-xs text-white outline-none" placeholder="Email" />
-               <button className="bg-rose-500 text-white p-2 rounded text-xs">Join</button>
-             </div>
+            <h4 className="font-bold text-gray-900 dark:text-white mb-6">Newsletter</h4>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Get Goan recipes and special offers delivered to your inbox.</p>
+            <div className="flex gap-2">
+              <input type="email" placeholder="Email address" className="bg-white dark:bg-gray-900 border border-indigo-100 dark:border-gray-800 rounded-lg px-4 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-indigo-100 dark:text-white" />
+              <button className="bg-[#ec4899] text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-[#db2777] transition-colors">Join</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto pt-8 border-t border-gray-100 dark:border-gray-900 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-400 dark:text-gray-600 font-medium">
+          <p>© 2026 Fatima's Place. All Rights Reserved.</p>
+          <div className="flex gap-8">
+            <Link to="/privacy" className="hover:text-gray-600 dark:hover:text-gray-400 cursor-pointer">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-gray-600 dark:hover:text-gray-400 cursor-pointer">Terms of Service</Link>
+            <Link to="/cookies" className="hover:text-gray-600 dark:hover:text-gray-400 cursor-pointer">Cookie Policy</Link>
           </div>
         </div>
       </footer>

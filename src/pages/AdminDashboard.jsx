@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   Palmtree, LayoutDashboard, ShoppingBag, UtensilsCrossed, Calendar, 
   Settings, LogOut, Download, PlusCircle, Target, TrendingUp, Users, Truck, AlertCircle, 
-  Sun, Moon, Bell, Shield, ChevronRight, Search, Filter, MoreVertical, Trash2, Edit3, X, User 
+  Sun, Moon, Bell, Shield, ChevronRight, Search, Filter, MoreVertical, Trash2, Edit3, X, User, ImagePlus 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
 
-// --- MENU DATA ---
 const initialMenuData = [
   { id: 1, name: "Porridge (Milk/Honey)", price: 130, category: "Breakfast", desc: "Healthy warm oats served with milk and honey." },
   { id: 2, name: "Muesli (Milk/Curd)", price: 200, category: "Breakfast", desc: "Mixed grains, nuts, and fruits with milk or curd." },
@@ -29,38 +28,28 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
-  // ==========================================
-  // ADMIN PROFILE STATE & LOGIC
-  // ==========================================
-  const defaultAvatar = "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?auto=format&fit=crop&q=80&w=60&h=60";
-  
-  // Local state for the form
   const [adminProfile, setAdminProfile] = useState({
     name: user?.name || 'Fatima Admin',
     email: user?.email || 'admin@fatimasplace.com',
     phone: user?.phone || '+91 98765 43210',
-    image: user?.image || defaultAvatar
+    image: user?.image || null
   });
 
-  // Sync if context updates externally
   useEffect(() => {
     if (user) {
-      setAdminProfile(prev => ({ ...prev, name: user.name, email: user.email, image: user.image || defaultAvatar }));
+      setAdminProfile(prev => ({ ...prev, name: user.name, email: user.email, image: user.image || null }));
     }
   }, [user]);
 
-  const handleImageUpload = (e) => {
+  const handleAdminImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file size (e.g., limit to 2MB)
       if (file.size > 2000000) {
         alert("File is too large. Please upload an image under 2MB.");
         return;
       }
-      
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Instantly update the local preview
         setAdminProfile(prev => ({ ...prev, image: reader.result }));
       };
       reader.readAsDataURL(file);
@@ -69,21 +58,10 @@ const AdminDashboard = () => {
 
   const handleProfileSave = (e) => {
     e.preventDefault();
-    // Update the AuthContext. This triggers a re-render of the top nav avatar!
-    login({ 
-      ...user, 
-      name: adminProfile.name, 
-      email: adminProfile.email, 
-      phone: adminProfile.phone, 
-      image: adminProfile.image,
-      role: 'admin' 
-    });
+    login({ ...user, name: adminProfile.name, email: adminProfile.email, phone: adminProfile.phone, image: adminProfile.image, role: 'admin' });
     alert("Admin profile updated successfully!");
   };
 
-  // ==========================================
-  // MOCK DATA FOR OVERVIEW
-  // ==========================================
   const dashboardStats = [
     { icon: <TrendingUp size={20} className="text-[#6b75f2]" />, label: "Total Revenue", value: "₹2,45,800", change: "+12.5%", changeColor: "text-green-500 bg-green-50 dark:bg-green-500/10" },
     { icon: <ShoppingBag size={20} className="text-orange-500" />, label: "Daily Orders", value: "84", change: "+8%", changeColor: "text-green-500 bg-green-50 dark:bg-green-500/10" },
@@ -99,48 +77,66 @@ const AdminDashboard = () => {
     { name: "Chicken Cafreal", volume: 60, height: "40%" }
   ];
 
-  const deliveryFleet = [
-    { name: "John Doe", id: "D-101", status: "In Transit", statusColor: "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300", time: "5 mins" },
-    { name: "Suresh K.", id: "D-105", status: "Pickup", statusColor: "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300", time: "2 mins" },
-    { name: "Mike Ross", id: "D-112", status: "Delivered", statusColor: "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300", time: "Done" },
-    { name: "Priya V.", id: "D-118", status: "Idle", statusColor: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300", time: "-" }
-  ];
+  // --- NEW: Empty Realistic Fleet States ---
+  const [deliveryFleet, setDeliveryFleet] = useState([]);
+  const [availableAgents, setAvailableAgents] = useState([]);
 
-  // ==========================================
-  // ORDERS & DELIVERY AGENT LOGIC
-  // ==========================================
   const [orders, setOrders] = useState([
     { id: 'ORD-9821', customer: 'Rahul Sharma', items: '3 items', status: 'Preparing', amount: '₹1250', agent: 'Assign Courier' },
-    { id: 'ORD-9822', customer: 'Anjali Gupta', items: '1 items', status: 'Out for Delivery', amount: '₹450', agent: 'John Doe' },
+    { id: 'ORD-9822', customer: 'Anjali Gupta', items: '1 items', status: 'Ready', amount: '₹450', agent: 'Assign Courier' },
     { id: 'ORD-9823', customer: 'Vikram Singh', items: '5 items', status: 'Ready', amount: '₹2100', agent: 'Assign Courier' },
-    { id: 'ORD-9824', customer: 'Sneha Patil', items: '2 items', status: 'Delivered', amount: '₹890', agent: 'Mike Ross' },
+    { id: 'ORD-9824', customer: 'Sneha Patil', items: '2 items', status: 'Delivered', amount: '₹890', agent: 'Assign Courier' },
     { id: 'ORD-9825', customer: 'David Miller', items: '4 items', status: 'Pending', amount: '₹1560', agent: 'Assign Courier' },
   ]);
 
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [activeActionDropdown, setActiveActionDropdown] = useState(null);
-  
   const [agentModalOpen, setAgentModalOpen] = useState(false);
   const [selectedOrderIdForAgent, setSelectedOrderIdForAgent] = useState(null);
   
-  const [availableAgents, setAvailableAgents] = useState(['John Doe', 'Mike Ross', 'Suresh K.', 'Priya V.', 'Amit Patel']);
   const [newAgentName, setNewAgentName] = useState('');
+  const [newAgentImage, setNewAgentImage] = useState(null);
 
   const filteredOrders = orders.filter(order => 
     order.id.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
     order.customer.toLowerCase().includes(orderSearchQuery.toLowerCase())
   );
 
+  const handleAgentImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setNewAgentImage(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddNewAgent = (e) => {
     e.preventDefault();
     if(newAgentName.trim() !== '') {
-      setAvailableAgents([...availableAgents, newAgentName.trim()]);
+      const newAgent = {
+        id: Date.now(),
+        name: newAgentName.trim(),
+        image: newAgentImage || null
+      };
+      setAvailableAgents([...availableAgents, newAgent]);
+      
+      // NEW: Add agent to the live fleet dashboard view
+      setDeliveryFleet([...deliveryFleet, { 
+        name: newAgent.name, id: `D-${Math.floor(Math.random()*1000)}`, status: "Idle", statusColor: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300", time: "-", image: newAgent.image
+      }]);
+
       setNewAgentName(''); 
+      setNewAgentImage(null); 
     }
   };
 
   const handleAssignAgent = (agentName) => {
     setOrders(orders.map(o => o.id === selectedOrderIdForAgent ? { ...o, agent: agentName } : o));
+    
+    // NEW: Update agent status to In Transit in the fleet view
+    setDeliveryFleet(deliveryFleet.map(agent => agent.name === agentName ? { ...agent, status: 'In Transit', statusColor: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300', time: 'Active' } : agent));
+    
     setAgentModalOpen(false);
   };
 
@@ -171,9 +167,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // ==========================================
-  // MENU MANAGEMENT STATE & LOGIC
-  // ==========================================
   const [menuItems, setMenuItems] = useState(initialMenuData);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -205,19 +198,33 @@ const AdminDashboard = () => {
     if(window.confirm("Delete this dish?")) setMenuItems(menuItems.filter(item => item.id !== id));
   };
 
+
   // ==========================================
-  // RESERVATIONS DATA
+  // --- NEW: INTERACTIVE RESERVATION STATE ---
   // ==========================================
-  const reservations = [
+  const [reservations, setReservations] = useState([
     { id: 'RES-01', name: 'Alia Bhatt', date: 'Today', time: '19:30', guests: 4, status: 'Confirmed', table: 'T-04' },
     { id: 'RES-02', name: 'Virat Kohli', date: 'Today', time: '20:00', guests: 2, status: 'Arrived', table: 'T-12' },
     { id: 'RES-03', name: 'Ratan Tata', date: 'Tomorrow', time: '13:00', guests: 6, status: 'Pending', table: 'Unassigned' },
-  ];
+  ]);
+
+  const handleUpdateReservationStatus = (id, newStatus) => {
+    setReservations(prev => prev.map(res => res.id === id ? { ...res, status: newStatus } : res));
+  };
+
+  const handleUpdateReservationTable = (id, newTable) => {
+    setReservations(prev => prev.map(res => res.id === id ? { ...res, table: newTable } : res));
+  };
+
+  const handleDeleteReservation = (id) => {
+    if(window.confirm("Are you sure you want to delete this reservation?")) {
+      setReservations(prev => prev.filter(res => res.id !== id));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8f9fb] dark:bg-[#0a0b10] flex transition-colors duration-300">
       
-      {/* AGENT SELECTION MODAL */}
       {agentModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
            <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95">
@@ -227,28 +234,45 @@ const AdminDashboard = () => {
               </div>
               
               <div className="space-y-2 mb-6 max-h-48 overflow-y-auto custom-scrollbar">
-                 {availableAgents.map(agent => (
-                   <button 
-                     key={agent} 
-                     onClick={() => handleAssignAgent(agent)} 
-                     className="w-full text-left px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-gray-700 dark:text-gray-300 hover:text-[#6b75f2] font-bold transition-colors flex items-center gap-3"
-                   >
-                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden"><img src={`https://i.pravatar.cc/40?u=${agent}`} alt={agent}/></div>
-                      {agent}
-                   </button>
-                 ))}
+                 {/* NEW: Empty State Handled here */}
+                 {availableAgents.length === 0 ? (
+                   <p className="text-center text-sm text-gray-400 py-4">No staff online. Add a new agent below.</p>
+                 ) : (
+                   availableAgents.map(agent => (
+                     <button 
+                       key={agent.id} 
+                       onClick={() => handleAssignAgent(agent.name)} 
+                       className="w-full text-left px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-gray-700 dark:text-gray-300 hover:text-[#6b75f2] font-bold transition-colors flex items-center gap-3"
+                     >
+                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
+                          {agent.image ? (
+                            <img src={agent.image} alt={agent.name} className="w-full h-full object-cover"/>
+                          ) : (
+                            <User size={14} className="text-gray-400" />
+                          )}
+                        </div>
+                        {agent.name}
+                     </button>
+                   ))
+                 )}
               </div>
 
-              <form onSubmit={handleAddNewAgent} className="mb-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex gap-2">
-                <input 
-                  type="text" 
-                  required
-                  value={newAgentName}
-                  onChange={(e) => setNewAgentName(e.target.value)}
-                  placeholder="New agent name..."
-                  className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6b75f2] dark:text-white"
-                />
-                <button type="submit" className="bg-[#5b6aff] hover:bg-[#4a58e8] transition-colors text-white px-3 py-2 rounded-lg text-sm font-bold">Add</button>
+              <form onSubmit={handleAddNewAgent} className="mb-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="w-10 h-10 rounded-full border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 overflow-hidden shrink-0 transition-colors">
+                     {newAgentImage ? <img src={newAgentImage} className="w-full h-full object-cover" /> : <ImagePlus size={16} className="text-gray-400" />}
+                     <input type="file" accept="image/*" className="hidden" onChange={handleAgentImageUpload} />
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    value={newAgentName}
+                    onChange={(e) => setNewAgentName(e.target.value)}
+                    placeholder="New agent name..."
+                    className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6b75f2] dark:text-white"
+                  />
+                  <button type="submit" className="bg-[#5b6aff] hover:bg-[#4a58e8] transition-colors text-white px-3 py-2 rounded-lg text-sm font-bold">Add</button>
+                </div>
               </form>
 
               <button onClick={handleRemoveAgent} className="w-full py-3.5 text-sm text-rose-500 font-bold bg-rose-50 dark:bg-rose-500/10 rounded-xl hover:opacity-80 transition-colors">
@@ -258,7 +282,6 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* --- 1. FIXED LEFT SIDEBAR --- */}
       <aside className="w-64 shrink-0 bg-white dark:bg-[#16171d] border-r border-gray-100 dark:border-gray-800 p-6 flex flex-col transition-colors duration-300 fixed inset-y-0 z-50">
         <Link to="/" className="flex items-center gap-3 mb-12">
           <div className="flex items-center justify-center w-[38px] h-[38px] text-white bg-[#5b6aff] rounded-full">
@@ -302,16 +325,16 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
-      {/* --- 2. MAIN CONTENT AREA --- */}
       <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        
-        {/* HEADER */}
         <header className="sticky top-0 z-40 bg-[#f8f9fb]/90 dark:bg-[#0a0b10]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 p-6 flex items-center justify-between transition-colors duration-300">
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">{activeContent}</h1>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center p-0.5 border-2 border-indigo-100 dark:border-gray-800 shrink-0">
-              {/* CRITICAL: Header uses context user image or default! */}
-              <img src={user?.image || defaultAvatar} alt="Admin" className="w-full h-full object-cover rounded-full" />
+            <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center p-0.5 border-2 border-indigo-100 dark:border-gray-800 shrink-0 overflow-hidden shadow-sm">
+              {user?.image || adminProfile.image ? (
+                <img src={user?.image || adminProfile.image} alt="Admin" className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <User size={20} className="text-gray-400" />
+              )}
             </div>
             <div className='flex flex-col'>
               <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{user?.name || "Fatima Admin"}</span>
@@ -322,9 +345,6 @@ const AdminDashboard = () => {
 
         <main className="p-8 lg:p-10 flex-grow animate-in fade-in duration-300">
           
-          {/* =========================================
-              OVERVIEW 
-             ========================================= */}
           {activeContent === 'Overview' && (
             <div className="space-y-10 animate-in fade-in">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -336,7 +356,7 @@ const AdminDashboard = () => {
                   <button className="px-6 py-2.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#16171d] font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
                     <Download size={16} /> Export Data
                   </button>
-                  <button className="px-6 py-2.5 rounded-lg bg-[#5b6aff] font-bold text-sm text-white shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-[#4a58e8] transition-colors flex items-center gap-2">
+                  <button onClick={() => setActiveContent('Reservations')} className="px-6 py-2.5 rounded-lg bg-[#5b6aff] font-bold text-sm text-white shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-[#4a58e8] transition-colors flex items-center gap-2">
                     <PlusCircle size={16} /> New Reservation
                   </button>
                 </div>
@@ -376,37 +396,42 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-[32px] p-8 shadow-sm flex flex-col">
-                  <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-1.5">Live Delivery Status</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 pb-4 border-b border-gray-100 dark:border-gray-800">Real-time fleet tracking</p>
+                  <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-1.5">Live Staff Fleet</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 pb-4 border-b border-gray-100 dark:border-gray-800">Assigned riders and staff on duty</p>
                   
                   <div className="space-y-5 flex-grow mb-6">
-                    {deliveryFleet.map(agent => (
-                      <div key={agent.id} className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gray-50 dark:bg-gray-800 border border-indigo-100 dark:border-gray-800">
-                            <img src={`https://i.pravatar.cc/40?u=${agent.id}`} alt={agent.name} className="w-full h-full object-cover rounded-full" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-tight">{agent.name}</p>
-                            <p className="text-[10px] text-gray-400 dark:text-gray-600 font-mono tracking-widest">{agent.id}</p>
-                          </div>
-                        </div>
-                        <div className='flex flex-col items-end'>
-                          <span className={`text-[10px] font-bold px-3 py-1 rounded-lg uppercase ${agent.statusColor}`}>{agent.status}</span>
-                          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-600 mt-1">{agent.time}</span>
-                        </div>
+                    {/* NEW: Empty state for overview fleet handled here */}
+                    {deliveryFleet.length === 0 ? (
+                      <div className="text-center text-gray-400 text-sm py-10 flex flex-col items-center">
+                        <Users size={32} className="mb-2 opacity-50" />
+                        <p>No staff online.<br/>Assign staff from the Orders tab.</p>
                       </div>
-                    ))}
+                    ) : (
+                      deliveryFleet.map(agent => (
+                        <div key={agent.id} className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center border border-indigo-100 dark:border-gray-800 shrink-0 overflow-hidden">
+                              {agent.image ? <img src={agent.image} className="w-full h-full object-cover" /> : <User size={16} className="text-gray-400" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-tight">{agent.name}</p>
+                              <p className="text-[10px] text-gray-400 dark:text-gray-600 font-mono tracking-widest">{agent.id}</p>
+                            </div>
+                          </div>
+                          <div className='flex flex-col items-end'>
+                            <span className={`text-[10px] font-bold px-3 py-1 rounded-lg uppercase ${agent.statusColor}`}>{agent.status}</span>
+                            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-600 mt-1">{agent.time}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                  <Link to="/track-order" className="w-full flex justify-center text-xs font-bold text-[#5b6aff] hover:underline pt-4 border-t border-gray-100 dark:border-gray-800 mt-auto">View All Agents</Link>
+                  <Link to="/track-order" className="w-full flex justify-center text-xs font-bold text-[#5b6aff] hover:underline pt-4 border-t border-gray-100 dark:border-gray-800 mt-auto">Open Live Map</Link>
                 </div>
               </div>
             </div>
           )}
 
-          {/* =========================================
-              ORDERS
-             ========================================= */}
           {activeContent === 'Orders' && (
             <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
               <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-3xl shadow-sm overflow-visible">
@@ -501,31 +526,9 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-[#16171d] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 flex items-start gap-4 border-l-4 border-l-orange-500">
-                  <div className="text-orange-500 mt-1"><Calendar size={20} /></div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white">Upcoming Event Today</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3">Birthday celebration for 12 guests at 8:00 PM (Table 4-6).</p>
-                    <button className="text-xs font-bold text-orange-500 hover:underline">View Logistics</button>
-                  </div>
-                </div>
-                <div className="bg-white dark:bg-[#16171d] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 flex items-start gap-4 border-l-4 border-l-[#6b75f2]">
-                  <div className="text-[#6b75f2] mt-1"><TrendingUp size={20} /></div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white">Daily Goal Tracking</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3">You are ₹12,400 away from your daily revenue target. Keep it up!</p>
-                    <button className="text-xs font-bold text-[#6b75f2] hover:underline">View Analytics</button>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
-          {/* =========================================
-              MENU MANAGEMENT
-             ========================================= */}
           {activeContent === 'Menu Management' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <div className="flex justify-between items-center">
@@ -590,39 +593,84 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* =========================================
-              RESERVATIONS
-             ========================================= */}
+           {/* ======================================= */}
+           {/* --- UPDATED: INTERACTIVE RESERVATIONS --- */}
+           {/* ======================================= */}
            {activeContent === 'Reservations' && (
              <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                <div>
                   <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">Table Reservations</h1>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Manage upcoming bookings and walk-ins.</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">Manage upcoming bookings, assign tables, and update statuses.</p>
                 </div>
-               <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
+               <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden pb-10">
                  <table className="w-full text-left text-sm">
                     <thead className="text-gray-500 dark:text-gray-400 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
                       <tr>
                         <th className="py-4 px-6 font-semibold">Guest Name</th>
                         <th className="py-4 px-6 font-semibold">Date & Time</th>
                         <th className="py-4 px-6 font-semibold">Party Size</th>
-                        <th className="py-4 px-6 font-semibold">Table</th>
-                        <th className="py-4 px-6 font-semibold">Status</th>
+                        <th className="py-4 px-6 font-semibold">Table Assignment</th>
+                        <th className="py-4 px-6 font-semibold">Live Status</th>
+                        <th className="py-4 px-6 font-semibold text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                      {reservations.length === 0 && (
+                        <tr><td colSpan="6" className="text-center py-10 text-gray-400">No upcoming reservations.</td></tr>
+                      )}
                       {reservations.map((res) => (
                         <tr key={res.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                           <td className="py-4 px-6 font-bold text-gray-900 dark:text-white">{res.name}</td>
-                          <td className="py-4 px-6 text-gray-500 dark:text-gray-400"><span className="font-bold text-gray-700 dark:text-gray-300 mr-2">{res.date}</span> {res.time}</td>
+                          <td className="py-4 px-6 text-gray-500 dark:text-gray-400">
+                            <span className="font-bold text-gray-700 dark:text-gray-300 mr-2">{res.date}</span> {res.time}
+                          </td>
                           <td className="py-4 px-6 text-gray-500 dark:text-gray-400">{res.guests} Guests</td>
-                          <td className="py-4 px-6 font-bold text-gray-900 dark:text-white">{res.table}</td>
+                          
+                          {/* EDITABLE TABLE FIELD */}
                           <td className="py-4 px-6">
-                            <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${
-                              res.status === 'Confirmed' ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' :
-                              res.status === 'Arrived' ? 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400' :
-                              'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400'
-                            }`}>{res.status}</span>
+                            <input 
+                              type="text" 
+                              value={res.table}
+                              onChange={(e) => handleUpdateReservationTable(res.id, e.target.value)}
+                              placeholder="e.g. T-04"
+                              className="bg-transparent border-b border-dashed border-gray-300 dark:border-gray-600 focus:border-[#6b75f2] dark:focus:border-[#6b75f2] outline-none w-24 font-bold text-gray-900 dark:text-white py-1 transition-colors hover:border-gray-400 dark:hover:border-gray-500"
+                            />
+                          </td>
+                          
+                          {/* EDITABLE STATUS DROPDOWN */}
+                          <td className="py-4 px-6">
+                            <div className="relative inline-block">
+                              <select 
+                                value={res.status}
+                                onChange={(e) => handleUpdateReservationStatus(res.id, e.target.value)}
+                                className={`appearance-none px-4 py-1.5 pr-8 text-[11px] font-bold rounded-full outline-none cursor-pointer transition-colors ${
+                                  res.status === 'Confirmed' ? 'bg-blue-100 text-blue-600 border border-blue-200 dark:border-transparent dark:bg-blue-500/20 dark:text-blue-400' :
+                                  res.status === 'Arrived' ? 'bg-green-100 text-green-600 border border-green-200 dark:border-transparent dark:bg-green-500/20 dark:text-green-400' :
+                                  res.status === 'Cancelled' ? 'bg-rose-100 text-rose-600 border border-rose-200 dark:border-transparent dark:bg-rose-500/20 dark:text-rose-400' :
+                                  'bg-orange-100 text-orange-600 border border-orange-200 dark:border-transparent dark:bg-orange-500/20 dark:text-orange-400'
+                                }`}
+                              >
+                                <option value="Pending" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-white">Pending</option>
+                                <option value="Confirmed" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-white">Confirmed</option>
+                                <option value="Arrived" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-white">Arrived</option>
+                                <option value="Cancelled" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-white">Cancelled</option>
+                              </select>
+                              {/* Custom dropdown arrow to fit the style */}
+                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-current opacity-60">
+                                <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* ACTION: DELETE */}
+                          <td className="py-4 px-6 text-center">
+                            <button 
+                              onClick={() => handleDeleteReservation(res.id)} 
+                              title="Delete Reservation"
+                              className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -632,13 +680,9 @@ const AdminDashboard = () => {
              </div>
            )}
 
-          {/* =========================================
-              SETTINGS (Profile / Appearance / Security)
-             ========================================= */}
           {(activeContent === 'Profile' || activeContent === 'Appearance' || activeContent === 'Security') && (
             <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-[32px] p-10 shadow-sm transition-colors duration-300">
               
-              {/* ADMIN PROFILE */}
               {activeContent === 'Profile' && (
                 <div className="space-y-8 animate-in fade-in duration-300">
                   <div> 
@@ -647,18 +691,22 @@ const AdminDashboard = () => {
                   </div>
                   <form onSubmit={handleProfileSave} className="space-y-8">
                     <div className="flex items-center gap-6">
-                      <div className="relative w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 border-4 border-white dark:border-[#16171d] shadow-md overflow-hidden shrink-0">
-                        {/* LIVE PREVIEW OF UPLOADED IMAGE */}
-                        <img src={adminProfile.image} alt="Profile" className="w-full h-full object-cover" />
+                      <div className="relative w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-4 border-white dark:border-[#16171d] shadow-md overflow-hidden shrink-0">
+                        {adminProfile.image ? (
+                          <img src={adminProfile.image} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={48} className="text-gray-300 dark:text-gray-600" />
+                        )}
                       </div>
                       <div>
                         <label className="inline-block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
                           Change Photo
-                          <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                          <input type="file" accept="image/*" className="hidden" onChange={handleAdminImageUpload} />
                         </label>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">JPG, GIF or PNG. Max size of 2MB.</p>
                       </div>
                     </div>
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-gray-500 dark:text-gray-400 ml-1">Full Name</label>
@@ -682,7 +730,6 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {/* APPEARANCE */}
               {activeContent === 'Appearance' && (
                 <div className="space-y-6">
                   <div> <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Theme Preferences</h2> <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">Force the dashboard into Light or Dark mode.</p> </div>
@@ -698,7 +745,6 @@ const AdminDashboard = () => {
                 </div>
               )}
               
-              {/* SECURITY */}
               {activeContent === 'Security' && (
                 <div className="text-center py-20 text-gray-400 animate-in fade-in duration-300">
                   <Shield size={48} className="mx-auto mb-4 opacity-20" />
