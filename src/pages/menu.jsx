@@ -8,6 +8,13 @@ import NavbarMain from "../components/NavbarMain";
 import { useCart } from '../context/CartContext'; 
 import { useAuth } from '../context/AuthContext'; 
 
+import breakfast from "/assets/breakfast.jpg";
+import starters from "/assets/starters.jpg";
+import burger from "/assets/burger.jpg";
+import eggs from "/assets/eggs.jpg";
+import pasta from "/assets/pasta.jpg";
+
+
 const menuData = [
   // ... (Your menuData remains identical)
   { id: 1, name: "Porridge (Milk/Honey)", price: 130, category: "Breakfast", desc: "Healthy warm oats served with milk and honey." },
