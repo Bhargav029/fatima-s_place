@@ -212,7 +212,8 @@ const Checkout = () => {
                     {addresses.length === 0 && <span className="text-xs text-gray-400 mt-1">Please add an address to continue</span>}
                   </div>
                 </div>
-              ) : (
+              ) : 
+              (
                 <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm max-w-md">
                   <label className="block text-sm font-bold text-gray-900 mb-3">What is your Table Number?</label>
                   <p className="text-xs text-gray-500 mb-4">Look for the small metal plaque on your table (e.g., "04").</p>
