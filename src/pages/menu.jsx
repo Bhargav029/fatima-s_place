@@ -13,7 +13,8 @@ import starters from "/assets/starters.jpg";
 import burger from "/assets/burger.jpg";
 import eggs from "/assets/eggs.jpg";
 import pasta from "/assets/pasta.jpg";
-
+import eggs from "/assets/eggs.jpg";
+import indianVeg from "/assets/indianVeg.jpg";
 
 const menuData = [
   // ... (Your menuData remains identical)
