@@ -1,5 +1,5 @@
 import { useState } from "react";
-import NavbarMain from "../components/NavBarmain";
+import NavbarMain from "../NavBarmain";
 import Footer from "../components/Footer";
 
 const Reservation = () => {
