@@ -2,13 +2,34 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Plus, Minus, ShoppingBag, Filter, ArrowRight, Palmtree,
-  Leaf, Info, PlusCircle, Instagram, Facebook, Twitter, MapPin, Phone, Mail ,UtensilsCrossed 
+  Leaf, Info, PlusCircle, Instagram, Facebook, Twitter, MapPin, Phone, Mail ,UtensilsCrossed ,ChevronLeft ,ChevronRight
 } from 'lucide-react';
 import NavbarMain from "../components/NavbarMain";
 import { useCart } from '../context/CartContext'; 
 import { useAuth } from '../context/AuthContext'; 
 
+import breakfast from "/assets/breakfast.jpg";
+import eggs from "/assets/eggs.jpg";
+import burgers from "/assets/burgers.jpg";
+import starters from "/assets/starters.jpg";
+import indianVeg from "/assets/indianVeg.jpg";
+import pasta from "/assets/pasta.jpg";
 
+const [currentMenuImage, setCurrentMenuImage] = useState(0);
+
+const menuImages = [
+  { src: "/public/assets/breakfast.jpg"},
+  { src: "/public/assets/eggs.jpg"},
+  { src: "/public/assets/burgers.jpg"},
+  { src: "/public/assets/starters.jpg"},
+  { src: "/public/assets/indianVeg.jpg"},
+  { src: "/public/assets/pasta.jpg"},
+];
+
+const pics [
+  
+]
+  
 const menuData = [
   // ... (Your menuData remains identical)
   { id: 1, name: "Porridge (Milk/Honey)", price: 130, category: "Breakfast", desc: "Healthy warm oats served with milk and honey." },
@@ -76,6 +97,7 @@ const Menu = () => {
       navigate('/login');
     }
   };
+  
 
   const filteredMenu = menuData.filter(item => {
     const matchesCategory = activeTab === "All" || item.category === activeTab;
@@ -84,6 +106,50 @@ const Menu = () => {
   });
 
   return (
+<div className="mb-12">
+  <div className="relative rounded-2xl overflow-hidden shadow-xl">
+    <img 
+      src={menuImages[currentMenuImage].src}
+      alt={menuImages[currentMenuImage].title}
+      className="w-full h-auto"
+    />
+    
+    {/* Navigation Arrows */}
+    <button 
+      onClick={() => setCurrentMenuImage(prev => prev === 0 ? menuImages.length - 1 : prev - 1)}
+      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full hover:bg-white transition-all"
+    >
+      <ChevronLeft size={24} />
+    </button>
+    <button 
+      onClick={() => setCurrentMenuImage(prev => prev === menuImages.length - 1 ? 0 : prev + 1)}
+      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full hover:bg-white transition-all"
+    >
+      <ChevronRight size={24} />
+    </button>
+    
+    {/* Image Info */}
+    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+      <h3 className="text-white font-bold">{menuImages[currentMenuImage].title}</h3>
+    </div>
+  </div>
+  
+  {/* Dots Indicator */}
+  <div className="flex justify-center gap-2 mt-4">
+    {menuImages.map((_, idx) => (
+      <button
+        key={idx}
+        onClick={() => setCurrentMenuImage(idx)}
+        className={`w-2 h-2 rounded-full transition-all ${
+          currentMenuImage === idx 
+            ? 'bg-[#6b75f2] w-4' 
+            : 'bg-gray-300 dark:bg-gray-600'
+        }`}
+      />
+    ))}
+  </div>
+</div>
+    
     <div className="min-h-screen bg-white dark:bg-[#0a0b10] transition-colors duration-300">
       <NavbarMain />
 
