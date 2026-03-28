@@ -116,13 +116,13 @@ const Menu = () => {
             {searchQuery && <p className="text-gray-400 mt-2">Showing results for "{searchQuery}"</p>}
           </div>
 
-          <div className="mb-12">
-  <div className="relative rounded-2xl overflow-hidden shadow-xl">
-    <img 
-      src={menuImages[currentMenuImage].src}
-      alt={menuImages[currentMenuImage].title}
-      className="w-full h-auto"
-    />
+  <div className="mb-12">
+    <div className="relative rounded-2xl overflow-hidden shadow-xl">
+      <img 
+        src={menuImages[currentMenuImage].src}
+        alt={menuImages[currentMenuImage].title}
+        className="w-full h-auto"
+      />
     
     {/* Navigation Arrows */}
     <button 
