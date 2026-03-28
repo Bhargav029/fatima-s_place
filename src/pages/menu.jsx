@@ -103,7 +103,20 @@ const Menu = () => {
   });
 
   return (
-<div className="mb-12">
+
+    <div className="min-h-screen bg-white dark:bg-[#0a0b10] transition-colors duration-300">
+      <NavbarMain />
+
+      <main className="max-w-7xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-10">
+        
+        {/* --- MENU LIST --- */}
+        <div className="flex-1">
+          <div className="mb-8">
+           <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Fatima's Menu</h1>
+            {searchQuery && <p className="text-gray-400 mt-2">Showing results for "{searchQuery}"</p>}
+          </div>
+
+          <div className="mb-12">
   <div className="relative rounded-2xl overflow-hidden shadow-xl">
     <img 
       src={menuImages[currentMenuImage].src}
@@ -147,17 +160,6 @@ const Menu = () => {
   </div>
 </div>
     
-    <div className="min-h-screen bg-white dark:bg-[#0a0b10] transition-colors duration-300">
-      <NavbarMain />
-
-      <main className="max-w-7xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-10">
-        
-        {/* --- MENU LIST --- */}
-        <div className="flex-1">
-          <div className="mb-8">
-           <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Fatima's Menu</h1>
-            {searchQuery && <p className="text-gray-400 mt-2">Showing results for "{searchQuery}"</p>}
-          </div>
 
           <div className="flex flex-wrap gap-2 mb-10">
             {["All", "Breakfast", "Goan", "Indian", "Snacks", "Continental"].map(cat => (
