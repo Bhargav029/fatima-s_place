@@ -8,22 +8,16 @@ import NavbarMain from "../components/NavbarMain";
 import { useCart } from '../context/CartContext'; 
 import { useAuth } from '../context/AuthContext'; 
 
-import breakfast from "/assets/breakfast.jpg";
-import eggs from "/assets/eggs.jpg";
-import burgers from "/assets/burgers.jpg";
-import starters from "/assets/starters.jpg";
-import indianVeg from "/assets/indianVeg.jpg";
-import pasta from "/assets/pasta.jpg";
 
 const [currentMenuImage, setCurrentMenuImage] = useState(0);
 
 const menuImages = [
-  { src: "/public/assets/breakfast.jpg"},
-  { src: "/public/assets/eggs.jpg"},
-  { src: "/public/assets/burgers.jpg"},
-  { src: "/public/assets/starters.jpg"},
-  { src: "/public/assets/indianVeg.jpg"},
-  { src: "/public/assets/pasta.jpg"},
+  { src: "/public/assets/breakfast.jpeg"},
+  { src: "/public/assets/eggs.jepg"},
+  { src: "/public/assets/burgers.jpeg"},
+  { src: "/public/assets/starters.jpeg"},
+  { src: "/public/assets/indianVeg.jpeg"},
+  { src: "/public/assets/pasta.jpeg"},
 ];
 
 
@@ -116,50 +110,47 @@ const Menu = () => {
             {searchQuery && <p className="text-gray-400 mt-2">Showing results for "{searchQuery}"</p>}
           </div>
 
-  <div className="mb-12">
-    <div className="relative rounded-2xl overflow-hidden shadow-xl">
-      <img 
-        src={menuImages[currentMenuImage].src}
-        alt={menuImages[currentMenuImage].title}
-        className="w-full h-auto"
-      />
-    
-    {/* Navigation Arrows */}
-    <button 
-      onClick={() => setCurrentMenuImage(prev => prev === 0 ? menuImages.length - 1 : prev - 1)}
-      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full hover:bg-white transition-all"
-    >
-      <ChevronLeft size={24} />
-    </button>
-    <button 
-      onClick={() => setCurrentMenuImage(prev => prev === menuImages.length - 1 ? 0 : prev + 1)}
-      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full hover:bg-white transition-all"
-    >
-      <ChevronRight size={24} />
-    </button>
-    
-    {/* Image Info */}
-    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-      <h3 className="text-white font-bold">{menuImages[currentMenuImage].title}</h3>
+<div className="mb-12">
+  <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">Our Menu</h2>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="rounded-xl overflow-hidden shadow-lg">
+      <img src="/images/breakfast.jpeg" alt="Breakfast Menu" className="w-full h-48 object-cover" />
+      <div className="p-3 bg-white dark:bg-gray-800 text-center">
+        <p className="font-semibold">Breakfast Menu</p>
+      </div>
+    </div>
+    <div className="rounded-xl overflow-hidden shadow-lg">
+      <img src="/images/egss.jpeg" alt="Goan Specialties" className="w-full h-48 object-cover" />
+      <div className="p-3 bg-white dark:bg-gray-800 text-center">
+        <p className="font-semibold">Eggs</p>
+      </div>
+    </div>
+    <div className="rounded-xl overflow-hidden shadow-lg">
+      <img src="/images/burgers.jpeg" alt="Burgers & Sandwiches" className="w-full h-48 object-cover" />
+      <div className="p-3 bg-white dark:bg-gray-800 text-center">
+        <p className="font-semibold">Burgers & Sandwiches</p>
+      </div>
+    </div>
+    <div className="rounded-xl overflow-hidden shadow-lg">
+      <img src="/images/starters.jpeg" alt="Starters" className="w-full h-48 object-cover" />
+      <div className="p-3 bg-white dark:bg-gray-800 text-center">
+        <p className="font-semibold">Starters</p>
+      </div>
+    </div>
+    <div className="rounded-xl overflow-hidden shadow-lg">
+      <img src="/images/indianVeg.jpg" alt="Indian Cuisine" className="w-full h-48 object-cover" />
+      <div className="p-3 bg-white dark:bg-gray-800 text-center">
+        <p className="font-semibold">Indian Cuisine</p>
+      </div>
+    </div>
+    <div className="rounded-xl overflow-hidden shadow-lg">
+      <img src="/images/pasta.jpeg" alt="Pasta" className="w-full h-48 object-cover" />
+      <div className="p-3 bg-white dark:bg-gray-800 text-center">
+        <p className="font-semibold">Pasta</p>
+      </div>
     </div>
   </div>
-  
-  {/* Dots Indicator */}
-  <div className="flex justify-center gap-2 mt-4">
-    {menuImages.map((_, idx) => (
-      <button
-        key={idx}
-        onClick={() => setCurrentMenuImage(idx)}
-        className={`w-2 h-2 rounded-full transition-all ${
-          currentMenuImage === idx 
-            ? 'bg-[#6b75f2] w-4' 
-            : 'bg-gray-300 dark:bg-gray-600'
-        }`}
-      />
-    ))}
-  </div>
 </div>
-    
 
           <div className="flex flex-wrap gap-2 mb-10">
             {["All", "Breakfast", "Goan", "Indian", "Snacks", "Continental"].map(cat => (
