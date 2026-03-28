@@ -26,10 +26,7 @@ const menuImages = [
   { src: "/public/assets/pasta.jpg"},
 ];
 
-const pics [
-  
-]
-  
+
 const menuData = [
   // ... (Your menuData remains identical)
   { id: 1, name: "Porridge (Milk/Honey)", price: 130, category: "Breakfast", desc: "Healthy warm oats served with milk and honey." },
