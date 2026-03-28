@@ -115,37 +115,37 @@ const Menu = () => {
   <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">Our Menu</h2>
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/breakfast.jpeg" alt="Breakfast Menu" className="w-full h-48 object-cover" />
+      <img src="/assets/breakfast.jpeg" alt="Breakfast Menu" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Breakfast Menu</p>
       </div>
     </div>
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/eggs.jpeg" alt="Eggs" className="w-full h-48 object-cover" />
+      <img src="/assets/eggs.jpeg" alt="Eggs" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Eggs</p>
       </div>
     </div>
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/burgers.jpeg" alt="Burgers & Sandwiches" className="w-full h-48 object-cover" />
+      <img src="/assets/burgers.jpeg" alt="Burgers & Sandwiches" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Burgers & Sandwiches</p>
       </div>
     </div>
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/starters.jpeg" alt="Starters" className="w-full h-48 object-cover" />
+      <img src="/assets/starters.jpeg" alt="Starters" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Starters</p>
       </div>
     </div>
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/indianVeg.jpeg" alt="Indian Cuisine" className="w-full h-48 object-cover" />
+      <img src="/assets/indianVeg.jpeg" alt="Indian Cuisine" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Indian Cuisine</p>
       </div>
     </div>
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/pasta.jpeg" alt="Pasta" className="w-full h-48 object-cover" />
+      <img src="/assets/pasta.jpeg" alt="Pasta" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Pasta</p>
       </div>
