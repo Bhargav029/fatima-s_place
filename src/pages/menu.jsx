@@ -12,12 +12,12 @@ import { useAuth } from '../context/AuthContext';
 const [currentMenuImage, setCurrentMenuImage] = useState(0);
 
 const menuImages = [
-  { src: "/public/assets/breakfast.jpeg"},
-  { src: "/public/assets/eggs.jepg"},
-  { src: "/public/assets/burgers.jpeg"},
-  { src: "/public/assets/starters.jpeg"},
-  { src: "/public/assets/indianVeg.jpeg"},
-  { src: "/public/assets/pasta.jpeg"},
+  { src: "/assets/breakfast.jpeg"},
+  { src: "/assets/eggs.jpeg"},
+  { src: "/assets/burgers.jpeg"},
+  { src: "/assets/starters.jpeg"},
+  { src: "/assets/indianVeg.jpeg"},
+  { src: "/assets/pasta.jpeg"},
 ];
 
 
@@ -120,7 +120,7 @@ const Menu = () => {
       </div>
     </div>
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/egss.jpeg" alt="Goan Specialties" className="w-full h-48 object-cover" />
+      <img src="/images/eggs.jpeg" alt="Eggs" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Eggs</p>
       </div>
@@ -138,7 +138,7 @@ const Menu = () => {
       </div>
     </div>
     <div className="rounded-xl overflow-hidden shadow-lg">
-      <img src="/images/indianVeg.jpg" alt="Indian Cuisine" className="w-full h-48 object-cover" />
+      <img src="/images/indianVeg.jpeg" alt="Indian Cuisine" className="w-full h-48 object-cover" />
       <div className="p-3 bg-white dark:bg-gray-800 text-center">
         <p className="font-semibold">Indian Cuisine</p>
       </div>
