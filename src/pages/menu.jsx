@@ -9,7 +9,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext'; 
 
 
-const [currentMenuImage, setCurrentMenuImage] = useState(0);
+
 
 const menuImages = [
   { src: "/assets/breakfast.jpeg"},
@@ -76,6 +76,7 @@ const menuData = [
 ];
 
 const Menu = () => {
+  const [currentMenuImage, setCurrentMenuImage] = useState(0);
   const { cartItems, addToCart, removeFromCart, subtotal, searchQuery } = useCart();
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("All");
