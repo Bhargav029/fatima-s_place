@@ -79,7 +79,7 @@ function Home() {
           <p className="mb-10 text-lg leading-relaxed text-gray-200">Experience the soulful essence of the coast. From spicy Fish Recheado to the creamy Bebinca, our kitchen brings the traditional heritage of Goa straight to your table.</p>
           
           <div className="flex flex-wrap items-center gap-4">
-            <Link to="/menu" className="px-8 py-3 font-bold text-white transition-all bg-[#6b75f2] rounded-lg hover:bg-[#5a64e1] shadow-md">
+            <Link to="/order" className="px-8 py-3 font-bold text-white transition-all bg-[#6b75f2] rounded-lg hover:bg-[#5a64e1] shadow-md">
               Order Food Now
             </Link>
             
@@ -167,7 +167,7 @@ function Home() {
         <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">Ready to taste the ocean?</h2>
         <p className="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto mb-12">Whether you're looking for a quick lunch or a celebratory dinner, we have a table waiting for you.</p>
         <div className="flex flex-wrap justify-center gap-6">
-          <Link to="/menu" className="px-10 py-4 font-bold text-white bg-[#6b75f2] rounded-lg shadow-lg hover:shadow-indigo-200 dark:shadow-none transition-all">
+          <Link to="/order" className="px-10 py-4 font-bold text-white bg-[#6b75f2] rounded-lg shadow-lg hover:shadow-indigo-200 dark:shadow-none transition-all">
             Order Food Online
           </Link>
           <Link to="/reservations" className="px-10 py-4 font-bold text-[#6b75f2] border-2 border-indigo-100 dark:border-gray-800 bg-white dark:bg-transparent rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-all">
