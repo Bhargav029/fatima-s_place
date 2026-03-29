@@ -3,9 +3,8 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Palmtree, Mail, Lock, User, ArrowLeft, ChevronRight } from 'lucide-react';
 
-// ADDED: Import Firebase tools
 import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase'; // Adjust path based on where you put firebase.js
+import { auth, googleProvider } from '../firebase'; 
 
 const Login = () => {
   const { login } = useAuth();
@@ -21,7 +20,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 1. Standard Email/Password Handler (from previous step)
+  // 1. Standard Email/Password Handler
   const handleAuth = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -36,22 +35,53 @@ const Login = () => {
     if (!isLogin) payload.fullName = fullName;
 
     try {
-      const response = await fetch('http://localhost/your-backend-folder/auth.php', {
+      // --- 🔴 LIVE BACKEND CODE (COMMENTED OUT FOR LOCAL TESTING) ---
+      /*
+      const response = await fetch('https://your-new-infinityfree-url.com/auth.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await response.json();
+      */
+
+      // --- 🟢 MOCK BACKEND CODE (ACTIVE FOR LOCAL TESTING) ---
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const data = {
+        status: 'success',
+        user: {
+          name: isLogin ? `${activeRole} User` : fullName,
+          email: email,
+          phone: "+91 98765 43210",
+          role: isLogin ? activeRole.toLowerCase() : 'customer'
+        }
+      };
+      // --------------------------------------------------------------
 
       if (data.status === 'success') {
+        const loggedInRole = data.user?.role || (isLogin ? activeRole.toLowerCase() : 'customer');
+        
         login({ 
           name: data.user?.name || (isLogin ? `${activeRole} User` : fullName), 
           email: email,
           phone: data.user?.phone || "+91 98765 43210", 
-          role: data.user?.role || (isLogin ? activeRole.toLowerCase() : 'customer')
+          role: loggedInRole
         }); 
-        const origin = location.state?.from || '/';
-        navigate(origin); 
+
+        // 🚀 BULLETPROOF REDIRECT LOGIC
+        // Using { replace: true } ensures they cannot hit the "Back" button to see the wrong page
+        if (loggedInRole === 'admin') {
+          navigate('/admin', { replace: true });
+        } else if (loggedInRole === 'driver') {
+          navigate('/driver', { replace: true });
+        } else if (loggedInRole === 'staff') {
+          navigate('/staff', { replace: true });
+        } else {
+          // Only customers are allowed to go back to the public pages
+          const origin = location.state?.from || '/';
+          navigate(origin, { replace: true }); 
+        }
       } else {
         setError(data.message || 'Authentication failed. Please try again.');
       }
@@ -62,49 +92,73 @@ const Login = () => {
     }
   };
 
-  // ADDED: 2. Google Authentication Handler
+  // 2. Google Authentication Handler
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      // Trigger the Firebase Google Popup
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // Prepare data for your PHP backend
       const payload = {
-        action: 'google_login', // Special action so PHP knows it's from Google
+        action: 'google_login', 
         email: user.email,
         fullName: user.displayName,
-        firebaseUid: user.uid, // You can save this in your database to link accounts
-        role: 'customer' // Default role for social logins
+        firebaseUid: user.uid, 
+        role: 'customer' 
       };
 
-      // Send to PHP to sync with your MySQL database
-      const response = await fetch('http://localhost/your-backend-folder/auth.php', {
+      // --- 🔴 LIVE BACKEND CODE (COMMENTED OUT FOR LOCAL TESTING) ---
+      /*
+      const response = await fetch('https://your-new-infinityfree-url.com/auth.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      
       const data = await response.json();
+      */
+
+      // --- 🟢 MOCK BACKEND CODE (ACTIVE FOR LOCAL TESTING) ---
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const data = {
+        status: 'success',
+        user: {
+          name: user.displayName,
+          email: user.email,
+          phone: "+91 98765 43210",
+          role: 'customer'
+        }
+      };
+      // --------------------------------------------------------------
 
       if (data.status === 'success') {
+        const loggedInRole = data.user?.role || 'customer';
+
         login({ 
           name: data.user?.name || user.displayName, 
           email: user.email,
           phone: data.user?.phone || "+91 98765 43210", 
-          role: data.user?.role || 'customer'
+          role: loggedInRole
         }); 
-        const origin = location.state?.from || '/';
-        navigate(origin); 
+
+        // 🚀 BULLETPROOF REDIRECT LOGIC FOR GOOGLE LOGIN
+        if (loggedInRole === 'admin') {
+          navigate('/admin', { replace: true });
+        } else if (loggedInRole === 'driver') {
+          navigate('/driver', { replace: true });
+        } else if (loggedInRole === 'staff') {
+          navigate('/staff', { replace: true });
+        } else {
+          const origin = location.state?.from || '/';
+          navigate(origin, { replace: true }); 
+        }
       } else {
         setError(data.message || 'Google authentication failed on server.');
       }
     } catch (err) {
       console.error(err);
-      // Only show error if they didn't just close the popup manually
       if (err.code !== 'auth/popup-closed-by-user') {
         setError('Failed to sign in with Google.');
       }
@@ -119,6 +173,7 @@ const Login = () => {
       <Palmtree className="absolute -left-24 top-1/4 w-[500px] h-[500px] text-gray-100/60 stroke-[0.5] -rotate-12 pointer-events-none" />
       <Palmtree className="absolute -right-24 bottom-1/4 w-[500px] h-[500px] text-gray-100/60 stroke-[0.5] rotate-12 pointer-events-none" />
 
+      {/* Only acts as a back button BEFORE they log in */}
       <Link to="/" className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-800 mb-6 z-10 transition-colors">
         <ArrowLeft size={14} /> Back to Fatima's Place
       </Link>
@@ -143,7 +198,7 @@ const Login = () => {
 
         {isLogin && (
           <div className="flex p-1 bg-gray-50 rounded-full mb-6 border border-gray-100">
-            {['Customer', 'Staff', 'Admin'].map((role) => (
+            {['Customer', 'Staff', 'Admin', 'Driver'].map((role) => (
               <button 
                 key={role}
                 type="button"
@@ -241,7 +296,6 @@ const Login = () => {
           </button>
         </form>
 
-        {/* ADDED: Google Sign In Section */}
         <div className="mt-6">
           <div className="relative flex items-center justify-center mb-6">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
