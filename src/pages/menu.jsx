@@ -8,9 +8,9 @@ const menuImages = [
   { src: "/assets/breakfast.jpeg", title: "Breakfast" },
   { src: "/assets/eggs.jpeg", title: "Eggs" },
   { src: "/assets/starters.jpeg", title: "Starters" },
-  { src: "/assets/Burger.jpg", title: "Burgers & Sandwiches" },
-  { src: "/assets/indianVeg.jpeg", title: "Indian dishes" },
-  { src: "/assets/Pasta.jpeg", title: "Pasta's" },
+  { src: "/assets/Burger.jpeg", title: "Burgers & Sandwiches" },
+  { src: "/assets/indianVeg.jpeg", title: "Indian Cuisine" },
+  { src: "/assets/Pasta.jpeg", title: "Pastas" },
 ];
 
 <div className="mb-12">
