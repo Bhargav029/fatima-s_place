@@ -73,8 +73,6 @@ const Login = () => {
         // Using { replace: true } ensures they cannot hit the "Back" button to see the wrong page
         if (loggedInRole === 'admin') {
           navigate('/admin', { replace: true });
-        } else if (loggedInRole === 'driver') {
-          navigate('/driver', { replace: true });
         } else if (loggedInRole === 'staff') {
           navigate('/staff', { replace: true });
         } else {
@@ -146,8 +144,6 @@ const Login = () => {
         // 🚀 BULLETPROOF REDIRECT LOGIC FOR GOOGLE LOGIN
         if (loggedInRole === 'admin') {
           navigate('/admin', { replace: true });
-        } else if (loggedInRole === 'driver') {
-          navigate('/driver', { replace: true });
         } else if (loggedInRole === 'staff') {
           navigate('/staff', { replace: true });
         } else {
@@ -198,7 +194,7 @@ const Login = () => {
 
         {isLogin && (
           <div className="flex p-1 bg-gray-50 rounded-full mb-6 border border-gray-100">
-            {['Customer', 'Staff', 'Admin', 'Driver'].map((role) => (
+            {['Customer', 'Staff', 'Admin'].map((role) => (
               <button 
                 key={role}
                 type="button"

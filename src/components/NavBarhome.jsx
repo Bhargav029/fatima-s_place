@@ -1,8 +1,28 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Palmtree, ShoppingBag, Settings, LogOut, LayoutDashboard, User, Menu, X } from 'lucide-react'; // ADDED: Menu and X for mobile
+import { ShoppingBag, Settings, LogOut, LayoutDashboard, User, Menu, X } from 'lucide-react'; 
 import { useCart } from '../context/CartContext'; 
 import { useAuth } from '../context/AuthContext';
+
+const AnimatedPalmtree = ({ className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <g className="custom-leaves-blow">
+      <path d="M13 8c0-2.76-2.46-5-5.5-5S2 5.24 2 8h2l1-1 1 1h4Z"/>
+      <path d="M13 7.14A5.82 5.82 0 0 1 16.5 6c3.04 0 5.5 2.24 5.5 5h-3l-1-1-1 1h-3"/>
+      <path d="M5.89 9.71c-2.15 2.15-2.3 5.47-.35 7.43l4.24-4.25.7-.7.71-.71 2.12-2.12c-1.95-1.96-5.27-1.8-7.42.35Z"/>
+    </g>
+    <path d="M11 15.5c.5 2.5-.17 4.5-1 6.5h4c2-5.5-.5-12-1-14"/>
+  </svg>
+);
 
 const NavbarHome = () => {
   const { cartItems } = useCart();
@@ -10,8 +30,8 @@ const NavbarHome = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // For user profile dropdown
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // ADDED: For mobile hamburger menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   
   const totalItems = cartItems?.reduce((acc, item) => acc + item.qty, 0) || 0;
 
@@ -22,31 +42,40 @@ const NavbarHome = () => {
     navigate('/');
   };
 
+  // --- CHANGED: Enhanced hover colors and added dark mode hover support
   const navLinkClass = (path) => `
     font-bold transition-colors duration-200 block py-2 lg:py-0
     ${location.pathname === path 
       ? 'text-[#5b6aff] drop-shadow-sm' 
-      : 'text-gray-600 dark:text-gray-300 hover:text-[#5b6aff]'}
+      : 'text-gray-600 dark:text-gray-300 hover:text-[#5b6aff] dark:hover:text-[#7885ff]'}
   `;
 
   const getDashboardLink = () => {
     if (user?.role === 'admin') return { path: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard };
-    
-    // Changed 'driver' to 'staff' logic as requested
     if (user?.role === 'staff' || user?.role === 'driver') return { path: '/staff', label: 'Staff Operations', icon: LayoutDashboard };
-    
     return { path: '/dashboard', label: 'My Dashboard', icon: User };
   };
   
   const dashboardInfo = getDashboardLink();
 
   return (
-    <nav className="flex items-center justify-between px-4 sm:px-6 md:px-12 py-4 bg-white/80 dark:bg-[#0a0b10]/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
+    <nav className="flex items-center justify-between px-4 sm:px-6 md:px-12 py-4 bg-white/80 dark:bg-[#0a0b10]/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-300 overflow-visible">
       
+      <style>{`
+        @keyframes leaves-blow {
+          0%, 100% { transform: rotate(-5deg); }
+          50% { transform: rotate(8deg); }
+        }
+        .custom-leaves-blow {
+          animation: leaves-blow 3s ease-in-out infinite;
+          transform-origin: 12px 14px; 
+        }
+      `}</style>
+
       {/* Brand Logo */}
-      <Link to="/" className="flex items-center gap-2 sm:gap-3 z-50" onClick={() => setIsMobileMenuOpen(false)}>
-        <div className="flex items-center justify-center w-8 h-8 sm:w-[38px] sm:h-[38px] text-white bg-[#5b6aff] rounded-full shadow-sm shrink-0">
-          <Palmtree size={18} strokeWidth={2.5} className="sm:w-5 sm:h-5" />
+      <Link to="/" className="flex items-center gap-2 sm:gap-3 z-50 group" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="flex items-center justify-center w-8 h-8 sm:w-[38px] sm:h-[38px] text-white bg-[#5b6aff] rounded-full shrink-0 shadow-[0_0_15px_rgba(91,106,255,0.6)] dark:shadow-[0_0_20px_rgba(91,106,255,0.8)] group-hover:shadow-[0_0_25px_rgba(91,106,255,1)] transition-shadow duration-300">
+          <AnimatedPalmtree className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
         </div>
         <span className="text-xl sm:text-[22px] font-bold text-gray-900 dark:text-white tracking-tight truncate">Fatima's Place</span>
       </Link>
@@ -135,7 +164,7 @@ const NavbarHome = () => {
           </div>
         )}
 
-        {/* ADDED: Mobile Hamburger Button */}
+        {/* Mobile Hamburger Button */}
         <button 
           className="lg:hidden p-1.5 sm:p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           onClick={() => {
@@ -148,7 +177,7 @@ const NavbarHome = () => {
 
       </div>
 
-      {/* ADDED: Mobile Dropdown Menu */}
+      {/* Mobile Dropdown Menu */}
       {isMobileMenuOpen && (
         <div className="absolute top-full left-0 w-full bg-white dark:bg-[#0a0b10] border-b border-gray-100 dark:border-gray-800 shadow-lg lg:hidden flex flex-col px-6 py-6 gap-2 animate-in slide-in-from-top-2 z-40">
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className={navLinkClass('/')}>Home</Link>
@@ -158,7 +187,6 @@ const NavbarHome = () => {
           
           <div className="h-[1px] w-full bg-gray-100 dark:bg-gray-800 my-2"></div>
 
-          {/* Show Login button on mobile if not authenticated */}
           {!isAuthenticated && (
             <Link 
               to="/login"
@@ -169,7 +197,6 @@ const NavbarHome = () => {
             </Link>
           )}
 
-          {/* Show Order Now button on mobile to customers */}
           {(!user || user.role === 'customer') && (
             <Link to="/menu" onClick={() => setIsMobileMenuOpen(false)} className="w-full sm:hidden text-center px-5 py-3 mt-2 text-[14px] font-bold text-white bg-[#e23744] rounded-md hover:bg-[#c9303c] transition-colors shadow-md">
               Order Now
