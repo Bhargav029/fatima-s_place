@@ -622,14 +622,32 @@ const StaffDashboard = () => {
                   {isDelivering ? 'Broadcasting live GPS location to customer...' : 'Start delivery to begin tracking your route.'}
                 </p>
 
-                <button 
-                  onClick={toggleDeliveryStatus}
-                  className={`w-full py-4 rounded-xl font-bold text-lg shadow-md transition-colors mb-8 ${
-                    isDelivering ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20' : 'bg-[#5b6aff] hover:bg-[#4a58e8] text-white shadow-indigo-500/20'
-                  }`}
-                >
-                  {isDelivering ? 'Stop Delivery' : 'Start Delivery Route'}
-                </button>
+                {/* --- DELIVERY ACTION BUTTONS --- */}
+                <div className="flex flex-col gap-3 mb-8">
+                  <button 
+                    onClick={toggleDeliveryStatus}
+                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-md transition-colors ${
+                      isDelivering ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20' : 'bg-[#5b6aff] hover:bg-[#4a58e8] text-white shadow-indigo-500/20'
+                    }`}
+                  >
+                    {isDelivering ? 'Stop Delivery' : 'Start Delivery Route'}
+                  </button>
+
+                  {/* NEW: Open Delivery Dashboard Button */}
+                  <button 
+                    onClick={() => navigate('/driver')}
+                    disabled={!isDelivering}
+                    className={`w-full py-3 rounded-xl font-bold text-md shadow-sm transition-all flex justify-center items-center gap-2 ${
+                      isDelivering 
+                        ? 'bg-indigo-50 text-[#5b6aff] hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-100 dark:border-indigo-500/30 cursor-pointer' 
+                        : 'bg-gray-50 text-gray-400 dark:bg-gray-800/50 dark:text-gray-600 border border-gray-100 dark:border-gray-800 cursor-not-allowed'
+                    }`}
+                  >
+                    <LayoutGrid size={18} />
+                    Open Live Delivery Dashboard
+                  </button>
+                </div>
+                {/* ------------------------------- */}
 
                 <div className="text-left border-t border-gray-100 dark:border-gray-800 pt-6">
                   <div className="flex justify-between items-center mb-4">

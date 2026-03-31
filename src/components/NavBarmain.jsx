@@ -1,8 +1,31 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Palmtree, Search, ShoppingBag, Settings, LogOut, LayoutDashboard, User } from 'lucide-react';
+
+import {Search, ShoppingBag, Settings, LogOut, LayoutDashboard, User } from 'lucide-react';
 import { useCart } from '../context/CartContext'; 
 import { useAuth } from '../context/AuthContext';
+
+const AnimatedPalmtree = ({ className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    {/* Only this group (the leaves) gets the animation class */}
+    <g className="custom-leaves-blow">
+      <path d="M13 8c0-2.76-2.46-5-5.5-5S2 5.24 2 8h2l1-1 1 1h4Z"/>
+      <path d="M13 7.14A5.82 5.82 0 0 1 16.5 6c3.04 0 5.5 2.24 5.5 5h-3l-1-1-1 1h-3"/>
+      <path d="M5.89 9.71c-2.15 2.15-2.3 5.47-.35 7.43l4.24-4.25.7-.7.71-.71 2.12-2.12c-1.95-1.96-5.27-1.8-7.42.35Z"/>
+    </g>
+    {/* The trunk sits outside the animation group, so it stays perfectly still! */}
+    <path d="M11 15.5c.5 2.5-.17 4.5-1 6.5h4c2-5.5-.5-12-1-14"/>
+  </svg>
+);
 
 const NavbarMain = () => {
   const { cartItems, searchQuery, setSearchQuery } = useCart();
@@ -34,28 +57,38 @@ const NavbarMain = () => {
   `;
 
   // Determine which dashboard link to show based on Role
-const getDashboardLink = () => {
+  const getDashboardLink = () => {
     if (user?.role === 'admin') return { path: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard };
-    
-    // --- CHANGE 'driver' TO 'staff' HERE ---
     if (user?.role === 'staff' || user?.role === 'driver') return { path: '/staff', label: 'Staff Operations', icon: LayoutDashboard };
-    
     return { path: '/dashboard', label: 'My Dashboard', icon: User }; 
   };
 
   const dashboardInfo = getDashboardLink();
 
   return (
-    <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-white/80 dark:bg-[#0a0b10]/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
+    <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-white/80 dark:bg-[#0a0b10]/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-300 overflow-visible">
       
-      <Link to="/" className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-[38px] h-[38px] text-white bg-[#5b6aff] rounded-full shadow-sm">
-          <Palmtree size={20} strokeWidth={2.5} />
+      {/* --- CHANGED: Added the CSS animation for the swaying leaves --- */}
+      <style>{`
+        @keyframes leaves-blow {
+          0%, 100% { transform: rotate(-5deg); }
+          50% { transform: rotate(8deg); }
+        }
+        .custom-leaves-blow {
+          animation: leaves-blow 3s ease-in-out infinite;
+          transform-origin: 12px 14px; /* Hinges exactly where leaves meet the trunk */
+        }
+      `}</style>
+
+      {/* --- CHANGED: Added 'group' to Link, and the glowing shadow classes to the logo container --- */}
+      <Link to="/" className="flex items-center gap-3 group">
+        <div className="flex items-center justify-center w-[38px] h-[38px] text-white bg-[#5b6aff] rounded-full shrink-0 shadow-[0_0_15px_rgba(91,106,255,0.6)] dark:shadow-[0_0_20px_rgba(91,106,255,0.8)] group-hover:shadow-[0_0_25px_rgba(91,106,255,1)] transition-shadow duration-300">
+          <AnimatedPalmtree className="w-[18px] h-[18px]" />
         </div>
         <span className="text-[22px] font-bold text-gray-900 dark:text-white tracking-tight">Fatima's Place</span>
       </Link>
 
-      <ul className="hidden lg:flex gap-8 text-[15px]">
+      <ul className="lg:flex gap-8 text-[15px]">
         <li><Link to="/" className={navLinkClass('/')}>Home</Link></li>
         <li><Link to="/menu" className={navLinkClass('/menu')}>Menu</Link></li>
         <li><Link to="/reservations" className={navLinkClass('/reservations')}>Reservations</Link></li>
@@ -64,7 +97,7 @@ const getDashboardLink = () => {
 
       <div className="flex items-center gap-4 md:gap-6">
         <div className="relative hidden md:block">
-          <Search className="absolute w-[15px] h-[15px] text-gray-400 -translate-y-1/2 left-3.5 top-1/2" />
+          <Search className="absolute w-[15px] h-[15px] text-gray-400 - hover:bg-yellow-100 translate-y-1/2 left-3.5 top-1/2" />
           <input 
             type="text" 
             placeholder="Search dishes..." 
