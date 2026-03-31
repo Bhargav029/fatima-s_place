@@ -5,7 +5,8 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import SpecialOffers from './pages/SpecialOffers';
 import Contact from './pages/Contact';
-import Menu from './pages/Menu';
+import menu from './pages/menu';
+import order from './pages/order';
 import Login from './pages/Login';
 import Checkout from './pages/Checkout';
 import Payment from './pages/Payment'; 
@@ -26,7 +27,8 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/offers" element={<SpecialOffers />} />
       <Route path="/contact" element={<Contact />} />
-      <Route path="/menu" element={<Menu />} />
+      <Route path="/menu" element={<menu />} />
+      <Route path="/order" element={<order />} />
       <Route path="/login" element={<Login />} />
       <Route path='/payment'element={<Payment/>}/>
       <Route path='/Payment-Success'element={<PaymentSuccess/>}/>
