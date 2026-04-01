@@ -100,7 +100,7 @@ const Payment = () => {
       const order = await fetchOrder.json();
 
       const options = {
-        key: 'YOUR_RAZORPAY_KEY_ID', 
+        key: 'rzp_live_SYAJaSHaJcjETB', 
         amount: order.amount,
         currency: "INR",
         name: "Fatima's Place",
