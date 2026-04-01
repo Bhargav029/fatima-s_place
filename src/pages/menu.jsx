@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
 // Add this state in your component
 const [currentMenuImage, setCurrentMenuImage] = useState(0);
@@ -56,3 +56,5 @@ const menuImages = [
     ))}
   </div>
 </div>
+
+export default Menu;
