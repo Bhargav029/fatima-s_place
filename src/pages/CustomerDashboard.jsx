@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, ShoppingBag, Calendar, Settings, Clock, 
   Star, Edit, CreditCard, ChevronRight, CheckCircle, 
@@ -13,6 +13,15 @@ const CustomerDashboard = () => {
   const { user, login, isAuthenticated } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('My Overview');
+  
+  // State for dynamic orders
+  const [recentOrders, setRecentOrders] = useState([]);
+
+  // Load orders from LocalStorage when dashboard mounts
+  useEffect(() => {
+    const savedOrders = JSON.parse(localStorage.getItem('fatimas_orders')) || [];
+    setRecentOrders(savedOrders);
+  }, []);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
@@ -37,20 +46,7 @@ const CustomerDashboard = () => {
     setActiveTab('My Overview');
   };
 
-  // --- MOCK DATA UPDATED TO MATCH CHECKOUT SCREENSHOT ---
-  const recentOrders = [
-    { 
-      id: 'F-15706', 
-      date: '04 Apr 2026, 05:43 PM', 
-      items: '2 items', 
-      status: 'Preparing', 
-      price: '₹454', 
-      isCancelled: false 
-    }
-  ];
-
   const tableBookings = [];
-
   const savedAddresses = [];
 
   const favoriteDishes = [
@@ -77,13 +73,16 @@ const CustomerDashboard = () => {
           {activeTab === 'My Overview' && (
             <div className="animate-in fade-in duration-300">
               
-              <div className="bg-[#6b75f2] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-lg shadow-indigo-200 dark:shadow-none mb-8 text-white">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center shrink-0"><Clock size={24} className="text-white" /></div>
-                  <div><h2 className="text-xl font-black mb-1">Order #F-15706 is being prepared!</h2><p className="text-indigo-100 text-sm">Estimated arrival in 24 minutes</p></div>
+              {/* DYNAMIC TOP BANNER: Only shows if there is an active order */}
+              {recentOrders.length > 0 && (
+                <div className="bg-[#6b75f2] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-lg shadow-indigo-200 dark:shadow-none mb-8 text-white">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center shrink-0"><Clock size={24} className="text-white" /></div>
+                    <div><h2 className="text-xl font-black mb-1">Order #{recentOrders[0].id} is being prepared!</h2><p className="text-indigo-100 text-sm">Estimated arrival in 24 minutes</p></div>
+                  </div>
+                  <Link to="/track-order" className="w-full md:w-auto px-8 py-3 bg-white text-[#6b75f2] rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors text-center shadow-sm">Track Live</Link>
                 </div>
-                <Link to="/track-order" className="w-full md:w-auto px-8 py-3 bg-white text-[#6b75f2] rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors text-center shadow-sm">Track Live</Link>
-              </div>
+              )}
 
               <div className="grid xl:grid-cols-3 gap-8 items-start">
                 
@@ -93,11 +92,11 @@ const CustomerDashboard = () => {
                   <div className="grid sm:grid-cols-3 gap-4">
                     <div className="bg-white dark:bg-[#16171d] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4">
                       <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 text-[#6b75f2] rounded-full flex items-center justify-center shrink-0"><ShoppingBag size={20} /></div>
-                      <div><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Orders</p><p className="text-2xl font-black text-gray-900 dark:text-white">1</p></div>
+                      <div><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Orders</p><p className="text-2xl font-black text-gray-900 dark:text-white">{recentOrders.length}</p></div>
                     </div>
                     <div className="bg-white dark:bg-[#16171d] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4">
                       <div className="w-12 h-12 bg-pink-50 dark:bg-pink-500/10 text-[#ec4899] rounded-full flex items-center justify-center shrink-0"><Star size={20} /></div>
-                      <div><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Loyalty Points</p><p className="text-2xl font-black text-gray-900 dark:text-white">45</p></div>
+                      <div><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Loyalty Points</p><p className="text-2xl font-black text-gray-900 dark:text-white">{recentOrders.length * 45}</p></div>
                     </div>
                     <div className="bg-white dark:bg-[#16171d] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4">
                       <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center shrink-0"><Calendar size={20} /></div>
@@ -105,7 +104,7 @@ const CustomerDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Recent Orders */}
+                  {/* Recent Orders - Maps over dynamic storage data */}
                   <div className="bg-white dark:bg-[#16171d] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
                     <div className="flex justify-between items-center mb-6">
                       <div><h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Orders</h3><p className="text-xs text-gray-500 dark:text-gray-400 mt-1">View and manage your recent dining experiences</p></div>
@@ -127,7 +126,11 @@ const CustomerDashboard = () => {
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-gray-500">No recent orders found.</p>
+                        <div className="p-5 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center bg-gray-50/50 dark:bg-[#16171d] text-center">
+                          <ShoppingBag size={24} className="text-gray-300 mb-2"/>
+                          <p className="text-sm text-gray-500 font-bold">No recent orders found.</p>
+                          <Link to="/menu" className="text-xs text-[#6b75f2] mt-1 hover:underline">Start ordering now</Link>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -206,7 +209,7 @@ const CustomerDashboard = () => {
                       </div>
                       <h3 className="text-xl font-black text-gray-900 dark:text-white text-center w-full truncate px-4">{user?.name || "Customer User"}</h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center w-full truncate px-4">{user?.email || "No email provided"}</p>
-                      <div className="bg-pink-50 dark:bg-pink-500/10 text-[#ec4899] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-8">Elite Member</div>
+                      <div className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-8">Member</div>
                       <div className="w-full grid grid-cols-2 gap-3 border-t border-gray-100 dark:border-gray-800 pt-6">
                         <button onClick={() => setActiveTab('Settings')} className="py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"><Edit size={14} /> Edit Profile</button>
                         <button className="py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"><CreditCard size={14} /> Payment</button>
