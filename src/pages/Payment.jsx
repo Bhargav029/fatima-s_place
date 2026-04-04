@@ -88,7 +88,7 @@ const Payment = () => {
 
     try {
       // 🟢 CORRECT URL WITH /api/
-      const createOrderUrl = 'http://localhost/api/payment.php?action=create_order';
+     const createOrderUrl = `${import.meta.env.VITE_API_URL}/payment.php?action=create_order`;
 
       const fetchOrder = await fetch(createOrderUrl, {
         method: 'POST',
