@@ -204,9 +204,9 @@ const Menu = () => {
               <button 
                 onClick={handleCheckoutClick} 
                 disabled={cartItems.length === 0} 
-                className="w-full bg-[#6b75f2] text-white py-4.5 rounded-2xl font-black flex justify-center items-center gap-3 shadow-lg shadow-indigo-500/30 dark:shadow-none hover:bg-[#5a64e1] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                className="w-full bg-[#6b75f2] text-white py-5 rounded-2xl font-black text-lg flex justify-center items-center gap-3 shadow-lg shadow-indigo-500/30 dark:shadow-none hover:bg-[#5a64e1] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
-                Proceed to Checkout <ArrowRight size={18} />
+                Proceed to Checkout <ArrowRight size={20} />
               </button>
             </div>
           </div>

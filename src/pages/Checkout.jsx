@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Plus, Minus, Trash2, Truck, ChevronRight, MapPin, CheckCircle2, PlusCircle, Palmtree, 
-  Instagram, Facebook, Twitter, Mail, Phone, X, UtensilsCrossed
+  Plus, Minus, Trash2, Truck, ChevronRight, MapPin, CheckCircle2, PlusCircle, 
+  X, UtensilsCrossed
 } from 'lucide-react';
 import NavbarMain from "../components/NavBarmain";
 import Footer from "../components/Footer";
@@ -16,7 +16,7 @@ const Checkout = () => {
   
   // States for Checkout logic
   const [orderType, setOrderType] = useState('delivery'); 
-  const [tableNumber, setTableNumber] = useState(''); 
+  const [selectedTables, setSelectedTables] = useState([]); 
   
   const [addresses, setAddresses] = useState([]); 
   const [selectedAddressId, setSelectedAddressId] = useState(null); 
@@ -29,7 +29,8 @@ const Checkout = () => {
   const deliveryFee = orderType === 'dine-in' ? 0 : (subtotal > 1500 ? 0 : (subtotal > 0 ? 45 : 0));
   const total = subtotal + gst + deliveryFee + packagingCharges;
 
-  const isOrderReady = cartItems.length > 0 && (orderType === 'delivery' ? selectedAddressId !== null : tableNumber.trim() !== '');
+  // Validation logic
+  const isOrderReady = cartItems.length > 0 && (orderType === 'delivery' ? selectedAddressId !== null : selectedTables.length > 0);
 
   const handleSaveAddress = (e) => {
     e.preventDefault();
@@ -48,11 +49,26 @@ const Checkout = () => {
     navigate('/payment', { 
       state: { 
         orderType, 
-        tableNumber, 
+        tableNumber: selectedTables.join(', '), 
         selectedAddressId,
         totalAmount: total
       } 
     });
+  };
+
+  // --- RESTAURANT 9-TABLE LAYOUT ---
+  const tables = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+  // Mock occupied tables (Greyed out)
+  const occupiedTables = ['3', '7'];
+
+  const handleTableClick = (tableId) => {
+    if (occupiedTables.includes(tableId)) return;
+    setSelectedTables((prev) =>
+      prev.includes(tableId)
+        ? prev.filter((t) => t !== tableId)
+        : [...prev, tableId]
+    );
   };
 
   return (
@@ -128,7 +144,7 @@ const Checkout = () => {
 
         <div className="flex flex-col lg:flex-row gap-10">
           
-          {/* LEFT COLUMN: ITEMS & ADDRESS */}
+          {/* LEFT COLUMN: ITEMS & ADDRESS/SEATING */}
           <div className="flex-1 space-y-12">
             
             <div className="flex gap-4">
@@ -214,16 +230,52 @@ const Checkout = () => {
                 </div>
               ) : 
               (
-                <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-[32px] p-8 shadow-sm max-w-md">
-                  <label className="block text-sm font-bold text-gray-900 dark:text-white mb-3">What is your Table Number?</label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Look for the small metal plaque on your table (e.g., "04").</p>
-                  <input 
-                    type="text" 
-                    placeholder="Enter table number..." 
-                    value={tableNumber}
-                    onChange={(e) => setTableNumber(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-4 text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:border-[#6b75f2] dark:focus:border-[#6b75f2] focus:bg-white dark:focus:bg-[#16171d] outline-none transition-colors"
-                  />
+                <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-[32px] p-6 shadow-sm overflow-hidden">
+                  
+                  {/* Legend */}
+                  <div className="flex justify-center gap-6 mb-8 pt-4 pb-6 border-b border-gray-50 dark:border-gray-800">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="w-4 h-4 rounded border-2 border-[#6b75f2] bg-white dark:bg-transparent"></div> Available
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="w-4 h-4 rounded bg-[#6b75f2]"></div> Selected
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700"></div> Occupied
+                    </div>
+                  </div>
+
+                  {/* 3x3 Table Grid */}
+                  <div className="flex justify-center pb-6">
+                    <div className="grid grid-cols-3 gap-4 md:gap-6">
+                      {tables.map((tableId) => {
+                        const isOccupied = occupiedTables.includes(tableId);
+                        const isSelected = selectedTables.includes(tableId);
+
+                        return (
+                          <button
+                            key={tableId}
+                            disabled={isOccupied}
+                            onClick={() => handleTableClick(tableId)}
+                            className={`
+                              w-16 h-16 md:w-20 md:h-20 rounded-2xl text-lg md:text-xl font-black transition-all flex items-center justify-center
+                              ${isOccupied 
+                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed border-transparent shadow-inner' 
+                                : isSelected 
+                                  ? 'bg-[#6b75f2] text-white border-[#6b75f2] shadow-lg shadow-[#6b75f2]/30 scale-105' 
+                                  : 'bg-white dark:bg-[#16171d] border-2 border-[#6b75f2] text-[#6b75f2] hover:bg-[#6b75f2]/10'
+                              }
+                            `}
+                          >
+                            T{tableId}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="text-center text-xs text-gray-400">
+                    Front Entrance / Counter Area
+                  </div>
                 </div>
               )}
             </div>
@@ -256,6 +308,15 @@ const Checkout = () => {
                   <span>Packaging Charges</span>
                   <span className="font-bold text-gray-900 dark:text-white">₹{packagingCharges}</span>
                 </div>
+                
+                {/* Show selected tables in summary if Dine-In */}
+                {orderType === 'dine-in' && selectedTables.length > 0 && (
+                  <div className="flex justify-between text-sm text-[#6b75f2] bg-indigo-50 dark:bg-indigo-500/10 p-3 rounded-xl mt-4">
+                    <span className="font-bold">Table(s) Selected</span>
+                    <span className="font-bold text-right">{selectedTables.map(t => `T${t}`).join(', ')}</span>
+                  </div>
+                )}
+
                 <div className="h-px bg-gray-100 dark:bg-gray-800 my-4" />
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900 dark:text-white">Grand Total</span>
