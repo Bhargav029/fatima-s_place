@@ -5,8 +5,8 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import SpecialOffers from './pages/SpecialOffers';
 import Contact from './pages/Contact';
-import menu from './pages/menu';
-import order from './pages/order';
+import Menu from './pages/menu'; // Changed to capital 'M'
+import Order from './pages/order'; // Changed to capital 'O'
 import Login from './pages/Login';
 import Checkout from './pages/Checkout';
 import Payment from './pages/Payment'; 
@@ -21,19 +21,25 @@ import LiveMap from './pages/LiveMap';
 import StaffDashboard from './pages/StaffDashboard';
 import Reservation from './pages/Reservations';
 import DriverDashboard from './pages/DriverDashboard';
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/offers" element={<SpecialOffers />} />
       <Route path="/contact" element={<Contact />} />
-      <Route path="/menu" element={<menu />} />
-      <Route path="/order" element={<order />} />
+      
+      {/* FIXED: Changed <menu /> to <Menu /> */}
+      <Route path="/menu" element={<Menu />} />
+      
+      {/* FIXED: Changed <order /> to <Order /> */}
+      <Route path="/Order" element={<Order />} />
+      
       <Route path="/login" element={<Login />} />
-      <Route path='/payment'element={<Payment/>}/>
-      <Route path='/Payment-Success'element={<PaymentSuccess/>}/>
-      <Route path='/PaymentFailed'element={<PaymentFailed/>}/>
-      <Route path='/Dashboard'element={<Dashboard/>}/>
+      <Route path='/payment' element={<Payment/>}/>
+      <Route path='/Payment-Success' element={<PaymentSuccess/>}/>
+      <Route path='/PaymentFailed' element={<PaymentFailed/>}/>
+      <Route path='/Dashboard' element={<Dashboard/>}/>
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/track-order" element={<TrackOrder/>}/>
@@ -42,8 +48,7 @@ function App() {
       <Route path="/reservations" element={<Reservation />} />
       <Route path="/driver" element={<DriverDashboard />} />
 
-      
-      {/* Protect the Admin route so only Admins can access it */}
+      {/* Protect the Admin route */}
       <Route path="/admin" element={
         <ProtectedRoute requireAdmin={true}>
           <AdminDashboard />

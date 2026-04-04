@@ -35,15 +35,10 @@ const Login = () => {
     if (!isLogin) payload.fullName = fullName;
 
     try {
-      // --- 🔴 LIVE BACKEND CODE (COMMENTED OUT FOR LOCAL TESTING) ---
-      /*
-      const response = await fetch('https://your-new-infinityfree-url.com/auth.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      */
+      const response = await fetch('http://23.22.236.144/api.php', {
+    method: 'POST',
+    // ... rest of your code
+});
 
       // --- 🟢 MOCK BACKEND CODE (ACTIVE FOR LOCAL TESTING) ---
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -107,15 +102,10 @@ const Login = () => {
         role: 'customer' 
       };
 
-      // --- 🔴 LIVE BACKEND CODE (COMMENTED OUT FOR LOCAL TESTING) ---
-      /*
-      const response = await fetch('https://your-new-infinityfree-url.com/auth.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      */
+      const response = await fetch('http://23.22.236.144/api.php', {
+    method: 'POST',
+    // ... rest of your code
+});
 
       // --- 🟢 MOCK BACKEND CODE (ACTIVE FOR LOCAL TESTING) ---
       await new Promise(resolve => setTimeout(resolve, 1000));
