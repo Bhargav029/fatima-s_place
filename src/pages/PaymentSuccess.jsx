@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { 
   HelpCircle, CheckCircle2, User, FileText, Clock3, 
@@ -10,13 +10,10 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Catch ALL the dynamic data passed from the Payment page
   const { orderData, orderType, cartItems, subtotal, deliveryFee, finalTotal, paymentMethod } = location.state || {};
 
-  // Security check
   if (!orderData || !cartItems) return <Navigate to="/" />;
 
-  // --- NEW: DYNAMIC TEXT BASED ON PAYMENT TYPE ---
   const isCOD = paymentMethod === 'cod';
   
   const pageTitle = isCOD ? "Order Placed Successfully!" : "Payment Successful!";
@@ -33,7 +30,31 @@ const PaymentSuccess = () => {
     hour: '2-digit', minute: '2-digit', hour12: true 
   });
 
-  // --- DYNAMIC RECEIPT GENERATOR ---
+  // --- SAVE ORDER TO LOCAL STORAGE DYNAMICALLY ---
+  useEffect(() => {
+    if (orderData && cartItems) {
+      const existingOrders = JSON.parse(localStorage.getItem('fatimas_orders')) || [];
+      
+      // Prevent duplicate saving if user refreshes the success page
+      const orderExists = existingOrders.some(order => order.id === orderData.id);
+      
+      if (!orderExists) {
+        const totalItems = cartItems.reduce((acc, item) => acc + item.qty, 0);
+        const newOrder = {
+          id: orderData.id,
+          date: currentDate,
+          items: `${totalItems} item${totalItems > 1 ? 's' : ''}`,
+          status: 'Preparing',
+          price: `₹${finalTotal}`,
+          isCancelled: false
+        };
+        
+        // Save the new order at the top of the history
+        localStorage.setItem('fatimas_orders', JSON.stringify([newOrder, ...existingOrders]));
+      }
+    }
+  }, [orderData, cartItems, finalTotal, currentDate]);
+
   const handleDownloadReceipt = () => {
     const itemRows = cartItems.map(item => 
       `      ${item.qty}x ${item.name.padEnd(35, ' ')} - ₹${item.price * item.qty}`

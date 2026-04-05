@@ -7,9 +7,9 @@ import {
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
-// --- NEW: FIREBASE IMPORTS ---
+// --- FIREBASE IMPORTS ---
 import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // Ensure your firebase.js config is correct
+import { db } from '../firebase'; 
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -41,14 +41,12 @@ const Payment = () => {
   const deliveryFee = orderType === 'dine-in' ? 0 : (subtotal > 1500 ? 0 : (subtotal > 0 ? 45 : 0));
   const finalTotal = subtotal + gst + deliveryFee + packagingCharges;
 
-  // --- NEW: SAVE ORDER TO FIREBASE FUNCTION ---
   const saveOrderToFirebase = async (orderData) => {
     try {
-      // Saves the new order to a collection called "orders"
       await setDoc(doc(db, "orders", orderData.id), {
         ...orderData,
         createdAt: new Date().toISOString(),
-        cartItems: cartItems // Save the actual items so the kitchen sees them!
+        cartItems: cartItems 
       });
     } catch (error) {
       console.error("Error saving order to Firebase: ", error);
@@ -60,28 +58,27 @@ const Payment = () => {
     setIsProcessing(true);
 
     const orderData = {
-      id: `F-${Math.floor(10000 + Math.random() * 90000)}`, // Generates an ID like F-92841
+      id: `F-${Math.floor(10000 + Math.random() * 90000)}`, 
       customer: user?.name || 'Guest Customer',
       items: `${cartItems.length} items`,
       status: 'Pending',
       amount: `₹${finalTotal}`,
       type: orderType === 'delivery' ? 'Delivery' : `Dine-In (T-${tableNumber})`,
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      paymentMethod: paymentMethod
     };
 
-    // --- IF CASH ON DELIVERY / PAY AT COUNTER ---
     if (paymentMethod === 'cod') {
-      await saveOrderToFirebase(orderData); // Save to cloud!
+      await saveOrderToFirebase(orderData); 
       
       navigate('/payment-success', { 
         state: { orderData, orderType, cartItems, subtotal, deliveryFee, finalTotal, paymentMethod: 'cod' } 
       });
       
       if (clearCart) clearCart();
-      return;
+      return; 
     }
 
-    // --- IF ONLINE PAYMENT (RAZORPAY) ---
     const res = await loadRazorpayScript();
     if (!res) {
       alert('Razorpay SDK failed to load. Are you connected to the internet?');
@@ -90,39 +87,72 @@ const Payment = () => {
     }
 
     try {
-      // NOTE: You STILL need your Node.js backend running for this part! 
-      // Razorpay requires a secure backend to generate the order ID.
-      const fetchOrder = await fetch('http://localhost:4000/create-razorpay-order', {
+      // 🟢 CORRECT URL WITH /api/
+     const createOrderUrl = `${import.meta.env.VITE_API_URL}/payment.php?action=create_order`;
+
+      const fetchOrder = await fetch(createOrderUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: finalTotal })
       });
-      const order = await fetchOrder.json();
+      
+      if (!fetchOrder.ok) {
+        const errorText = await fetchOrder.text();
+        throw new Error(`Server returned status ${fetchOrder.status}.\nDetails: ${errorText}`);
+      }
+
+      const textResponse = await fetchOrder.text();
+      let order;
+      try {
+        order = JSON.parse(textResponse);
+      } catch (parseError) {
+        throw new Error(`Server did not return valid JSON.\nWhat it returned instead:\n\n${textResponse.substring(0, 150)}...`);
+      }
 
       const options = {
-        key: 'YOUR_RAZORPAY_KEY_ID', 
+        key: 'rzp_live_SYAJaSHaJcjETB', 
         amount: order.amount,
         currency: "INR",
         name: "Fatima's Place",
         description: "Authentic Goan Cuisine Order",
         order_id: order.id,
+        
+        config: {
+          display: {
+            blocks: {
+              upi: { name: "Pay via UPI", instruments: [{ method: "upi" }] },
+              wallets: { name: "Mobile Wallets", instruments: [{ method: "wallet" }] }
+            },
+            sequence: paymentMethod === 'upi' ? ["block.upi"] : paymentMethod === 'wallet' ? ["block.wallets"] : ["block.cards", "block.upi"]
+          }
+        },
+
         handler: async function (response) {
-          const verifyRes = await fetch('http://localhost:4000/verify-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(response)
-          });
-          
-          if (verifyRes.ok) {
-            await saveOrderToFirebase(orderData); // Save to cloud!
-            
-            navigate('/payment-success', { 
-              state: { orderData, orderType, cartItems, subtotal, deliveryFee, finalTotal, paymentMethod: 'online' } 
+          try {
+            // 🟢 FIXED URL: Added /api/ here as well!
+            const verifyPaymentUrl = 'http://localhost/api/payment.php?action=verify_payment';
+
+            const verifyRes = await fetch(verifyPaymentUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(response)
             });
             
-            if (clearCart) clearCart();
-          } else {
-            navigate('/payment-failed');
+            if (verifyRes.ok) {
+              await saveOrderToFirebase(orderData);
+              
+              navigate('/payment-success', { 
+                state: { orderData, orderType, cartItems, subtotal, deliveryFee, finalTotal, paymentMethod: 'online' } 
+              });
+              
+              if (clearCart) clearCart();
+            } else {
+              alert("Payment verification failed at the server!");
+              setIsProcessing(false);
+            }
+          } catch (err) {
+            alert(`Verification Error: ${err.message}`);
+            setIsProcessing(false);
           }
         },
         prefill: {
@@ -130,27 +160,34 @@ const Payment = () => {
           email: user?.email || "customer@example.com",
           contact: user?.phone || "9999999999"
         },
-        theme: { color: "#6b75f2" }
+        theme: { color: "#6b75f2" },
+        modal: {
+          ondismiss: function() {
+            setIsProcessing(false); 
+          }
+        }
       };
 
       const paymentObject = new window.Razorpay(options);
       
-      paymentObject.on('payment.failed', function () {
-        navigate('/payment-failed');
+      paymentObject.on('payment.failed', function (response) {
+        alert(`Razorpay Gateway Error: ${response.error.description}`);
+        setIsProcessing(false);
       });
       
       paymentObject.open();
-      setIsProcessing(false); 
 
     } catch (error) {
+      alert(`🚨 CRITICAL ERROR DETECTED:\n\n${error.message}\n\n(Check your console for more details)`);
       console.error("Payment setup failed:", error);
-      navigate('/payment-failed');
+      setIsProcessing(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#f8f9fb] flex flex-col font-sans">
       
+      {/* Header */}
       <header className="bg-white border-b border-gray-100 py-4 px-6 md:px-12 flex justify-between items-center sticky top-0 z-50">
         <div className="w-24 hidden md:block"></div> 
         
@@ -172,6 +209,7 @@ const Payment = () => {
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="max-w-6xl mx-auto w-full px-6 py-10 flex-grow">
         
         <div className="flex justify-between items-end mb-8">
@@ -187,6 +225,7 @@ const Payment = () => {
 
         <div className="flex flex-col lg:flex-row gap-8">
           
+          {/* Left Column: Payment Methods */}
           <div className="w-full lg:w-64 shrink-0 space-y-2">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-2">Payment Categories</p>
             {[
@@ -212,6 +251,7 @@ const Payment = () => {
             ))}
           </div>
 
+          {/* Middle Column: Payment Forms */}
           <div className="flex-1">
             {paymentMethod === 'card' && (
               <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm">
@@ -266,18 +306,19 @@ const Payment = () => {
                   {paymentMethod === 'upi' ? <Smartphone size={32}/> : paymentMethod === 'wallet' ? <Wallet size={32}/> : <Truck size={32}/>}
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {paymentMethod === 'upi' ? 'Pay via UPI' : paymentMethod === 'wallet' ? 'Redirecting to Wallet...' : 'Pay on Arrival'}
+                  {paymentMethod === 'upi' ? 'Pay via UPI' : paymentMethod === 'wallet' ? 'Pay via Wallet' : 'Pay on Arrival'}
                 </h2>
                 <p className="text-gray-500 mb-8 max-w-sm mx-auto">
                   {paymentMethod === 'cod' ? 'You will pay the server or delivery executive when your food arrives.' : 'Complete the payment using the secure Razorpay gateway.'}
                 </p>
-                <button onClick={handleCompletePayment} disabled={isProcessing} className="bg-[#6b75f2] text-white px-10 py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#5a64e1] transition-all w-full sm:w-auto">
-                  {isProcessing ? "Processing..." : (paymentMethod === 'cod' ? `Confirm Order for ₹${finalTotal}` : `Confirm & Pay ₹${finalTotal}`)}
+                <button onClick={handleCompletePayment} disabled={isProcessing} className="bg-[#6b75f2] text-white px-10 py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#5a64e1] disabled:opacity-70 transition-all w-full sm:w-auto">
+                  {isProcessing ? "Processing..." : (paymentMethod === 'cod' ? `Confirm Order for ₹${finalTotal}` : `Proceed to Pay ₹${finalTotal}`)}
                 </button>
               </div>
             )}
           </div>
 
+          {/* Right Column: Order Summary */}
           <div className="w-full lg:w-80 shrink-0 space-y-6">
             <div className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-sm">
               <h2 className="text-lg font-bold text-gray-900 mb-6">Order Summary</h2>
