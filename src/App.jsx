@@ -19,7 +19,7 @@ import Dashboard from './pages/CustomerDashboard';
 import TrackOrder from './pages/TrackOrder';
 import LiveMap from './pages/LiveMap';
 import StaffDashboard from './pages/StaffDashboard';
-import Reservation from './pages/Reservations';
+import Reservations from './pages/Reservations';
 import DriverDashboard from './pages/DriverDashboard';
 
 function App() {
@@ -45,7 +45,7 @@ function App() {
       <Route path="/track-order" element={<TrackOrder/>}/>
       <Route path="/live-map" element={<LiveMap />} />
       <Route path="/staff" element={<StaffDashboard />} />
-      <Route path="/reservations" element={<Reservation />} />
+      <Route path="/reservations" element={<Reservations />} />
       <Route path="/driver" element={<DriverDashboard />} />
 
       {/* Protect the Admin route */}

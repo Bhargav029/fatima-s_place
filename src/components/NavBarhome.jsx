@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Settings, LogOut, LayoutDashboard, User, Menu, X } from 'lucide-react'; 
 import { useCart } from '../context/CartContext'; 
@@ -33,7 +33,31 @@ const NavbarHome = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   
-  const totalItems = cartItems?.reduce((acc, item) => acc + item.qty, 0) || 0;
+  // 🟢 NEW: Local state to track the cart total instantly
+  const [totalItems, setTotalItems] = useState(0);
+
+  // 🟢 NEW: Listen for the custom 'cartUpdated' event from Home.jsx
+  useEffect(() => {
+    const updateCartCount = () => {
+      // Pull directly from local storage so it instantly sees the Home page additions
+      const cart = JSON.parse(localStorage.getItem('fatimas_cart')) || [];
+      const count = cart.reduce((acc, item) => acc + item.qty, 0);
+      setTotalItems(count);
+    };
+
+    // Run once on load
+    updateCartCount();
+
+    // Listen for events
+    window.addEventListener('cartUpdated', updateCartCount);
+    window.addEventListener('storage', updateCartCount); // Helps if multiple tabs are open
+
+    // Cleanup listeners
+    return () => {
+      window.removeEventListener('cartUpdated', updateCartCount);
+      window.removeEventListener('storage', updateCartCount);
+    };
+  }, [cartItems]); // Also re-run if the context happens to update
 
   const handleLogout = () => {
     logout();
@@ -42,7 +66,6 @@ const NavbarHome = () => {
     navigate('/');
   };
 
-  // --- CHANGED: Enhanced hover colors and added dark mode hover support
   const navLinkClass = (path) => `
     font-bold transition-colors duration-200 block py-2 lg:py-0
     ${location.pathname === path 
@@ -105,7 +128,7 @@ const NavbarHome = () => {
 
         {/* Desktop Order Now Button */}
         {(!user || user.role === 'customer') && (
-          <Link to="/menu" className="hidden sm:block px-5 py-[9px] text-[14px] font-bold text-white bg-[#e23744] rounded-md hover:bg-[#c9303c] transition-colors shadow-md whitespace-nowrap">
+          <Link to="/order" className="hidden sm:block px-5 py-[9px] text-[14px] font-bold text-white bg-[#e23744] rounded-md hover:bg-[#c9303c] transition-colors shadow-md whitespace-nowrap">
             Order Now
           </Link>
         )}

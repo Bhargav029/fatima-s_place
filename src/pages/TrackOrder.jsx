@@ -80,7 +80,9 @@ const TrackOrder = () => {
             <button className="bg-white dark:bg-[#16171d] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
               <Share2 size={16}/> Share
             </button>
-            {orderData.type === 'Delivery' && currentStatus === 'Ready' && (
+            
+            {/* 🟢 UPDATED CONDITION: Shows for all Delivery orders that aren't Delivered yet */}
+            {orderData.type === 'Delivery' && currentStatus !== 'Delivered' && (
               <button 
                 onClick={() => navigate('/live-map')} 
                 className="bg-[#6b75f2] text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#5a64e1] transition-colors shadow-md shadow-indigo-100 dark:shadow-none animate-pulse"

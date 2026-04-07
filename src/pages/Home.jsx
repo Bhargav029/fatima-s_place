@@ -12,14 +12,16 @@ import {
   Twitter, 
   Phone,
   X,        // Added for popup close button
-  Gift      // Added for popup icon
+  Gift,     // Added for popup icon
+  ShoppingCart // Added for Add to Cart button
 } from 'lucide-react';
 
 // Context
-import { useAuth } from '../context/AuthContext'; // Added to check login status
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext'; // 🟢 ADDED: CartContext import
 
 // Components
-import Navbar from "../components/NavBarhome";
+import NavbarMain from "../components/NavBarmain"; // 🟢 FIXED: Pointed to the correct, working Navbar
 import Footer from "../components/Footer";
 
 // Assets
@@ -29,9 +31,14 @@ import chicken from "/assets/chicken_x.png";
 import prawns from "/assets/prawns.jpg";
 
 function Home() {
-  // --- ADDED: POPUP LOGIC ---
   const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart(); // 🟢 ADDED: Pulling addToCart from context
+  
   const [showPopup, setShowPopup] = useState(false);
+  
+  // --- DISH MODAL STATE ---
+  const [selectedDish, setSelectedDish] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -41,10 +48,11 @@ function Home() {
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated]);
-  // ---------------------------
 
+  // Added unique IDs to dishes so they can be tracked in the cart
   const dishes = [
     { 
+      id: "loved_biryani",
       image: biryani, 
       name: "Biryani", 
       desc: "A fragrant and flavorful rice dish layered with marinated meat, caramelized onions, and aromatic spices, slow-cooked to perfection.",
@@ -52,6 +60,7 @@ function Home() {
       rating: 5 
     },
     { 
+      id: "loved_prawns",
       image: prawns, 
       name: "Prawn Balchão", 
       price: 720, 
@@ -59,6 +68,7 @@ function Home() {
       rating: 5 
     },
     { 
+      id: "loved_chicken_xacuti",
       image: chicken, 
       name: "Chicken Xacuti", 
       price: 350, 
@@ -67,9 +77,31 @@ function Home() {
     },
   ];
 
+  // --- 🟢 FIXED: ADD TO CART FUNCTION USING CONTEXT ---
+  const handleAddToCart = () => {
+    if (!selectedDish) return;
+
+    // Send the dish directly to your CartContext (which automatically handles quantities!)
+    addToCart({ 
+      id: selectedDish.id,
+      name: selectedDish.name,
+      price: selectedDish.price,
+      image: selectedDish.image,
+      desc: selectedDish.desc,
+      qty: quantity 
+    });
+
+    alert(`Successfully added ${quantity}x ${selectedDish.name} to your cart!`);
+    
+    // Close Modal and reset quantity
+    setSelectedDish(null);
+    setQuantity(1);
+  };
+
   return (
     <div className="min-h-screen font-sans text-gray-900 bg-white dark:bg-[#0a0b10] transition-colors duration-300 relative">
-      <Navbar />
+      {/* 🟢 FIXED: Using NavbarMain so it matches the rest of the app */}
+      <NavbarMain />
 
       {/* --- 1. HERO SECTION --- */}
       <section className="relative h-[85vh] flex items-center px-6 md:px-20 overflow-hidden">
@@ -109,7 +141,11 @@ function Home() {
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {dishes.map((dish, index) => (
-            <div key={index} className="relative p-6 transition-all bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 shadow-sm rounded-2xl hover:shadow-xl dark:hover:shadow-indigo-500/10 group">
+            <div 
+              key={index} 
+              onClick={() => { setSelectedDish(dish); setQuantity(1); }}
+              className="relative p-6 transition-all bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 shadow-sm rounded-2xl hover:shadow-xl dark:hover:shadow-indigo-500/10 group cursor-pointer"
+            >
               <div className="absolute top-4 right-4 z-10 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-700 dark:text-gray-200">₹{dish.price}</div>
               <div className="flex justify-center mb-6 h-52">
                 <img src={dish.image} alt={dish.name} className="object-contain h-full transition-transform duration-500 group-hover:scale-110" />
@@ -118,7 +154,12 @@ function Home() {
               <p className="mb-6 text-sm leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">{dish.desc}</p>
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex text-orange-400 text-lg">{"★".repeat(dish.rating)}</div>
-                <button className="flex items-center justify-center w-10 h-10 text-2xl font-light border border-gray-200 dark:border-gray-700 rounded-full text-gray-400 hover:text-indigo-600 dark:hover:text-[#6b75f2] hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">+</button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setSelectedDish(dish); setQuantity(1); }}
+                  className="flex items-center justify-center w-10 h-10 text-2xl font-light border border-gray-200 dark:border-gray-700 rounded-full text-gray-400 hover:text-indigo-600 dark:hover:text-[#6b75f2] hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                >
+                  +
+                </button>
               </div>
             </div>
           ))}
@@ -180,8 +221,76 @@ function Home() {
     {/* FOOTER */}
       <Footer />
 
-      {/* --- ADDED: 5-SECOND LOGIN POPUP MODAL --- */}
-      {showPopup && (
+      {/* --- DISH DETAILS & ADD TO CART MODAL --- */}
+      {selectedDish && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#16171d] rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-200">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedDish(null)}
+              className="absolute top-4 right-4 w-8 h-8 bg-black/10 dark:bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-black/20 dark:hover:bg-white/20 transition-colors z-10"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Dish Image */}
+            <div className="w-full h-56 bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">
+              <img src={selectedDish.image} alt={selectedDish.name} className="h-full object-contain drop-shadow-xl" />
+            </div>
+
+            {/* Dish Info */}
+            <div className="p-8">
+              <div className="flex justify-between items-start mb-2">
+                <h2 className="text-2xl font-black text-gray-900 dark:text-white">{selectedDish.name}</h2>
+                <span className="text-xl font-black text-[#6b75f2]">₹{selectedDish.price}</span>
+              </div>
+              
+              <div className="flex items-center gap-1 text-orange-400 text-sm mb-4">
+                {"★".repeat(selectedDish.rating)}
+                <span className="text-gray-400 dark:text-gray-500 text-xs ml-2">({selectedDish.rating}.0)</span>
+              </div>
+
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-8">
+                {selectedDish.desc}
+              </p>
+
+              {/* Quantity & Add to Cart Controls */}
+              <div className="flex items-center gap-4">
+                {/* Quantity Selector */}
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-xl p-1.5 w-32 border border-gray-200 dark:border-gray-700">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-[#16171d] text-gray-600 dark:text-gray-300 shadow-sm hover:text-[#6b75f2] transition-colors"
+                  >
+                    -
+                  </button>
+                  <span className="font-bold text-gray-900 dark:text-white">{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-[#16171d] text-gray-600 dark:text-gray-300 shadow-sm hover:text-[#6b75f2] transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Add to Cart Button */}
+                <button 
+                  onClick={handleAddToCart}
+                  className="flex-1 bg-[#6b75f2] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#5a64e1] transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                >
+                  <ShoppingCart size={18} /> 
+                  Add to Cart • ₹{selectedDish.price * quantity}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* --- 5-SECOND LOGIN POPUP MODAL --- */}
+      {showPopup && !selectedDish && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-[#16171d] rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 relative border border-gray-100 dark:border-gray-800">
             

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Plus, Minus, Trash2, Truck, ChevronRight, MapPin, CheckCircle2, PlusCircle, 
@@ -8,6 +8,10 @@ import NavbarMain from "../components/NavBarmain";
 import Footer from "../components/Footer";
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+
+// --- FIREBASE IMPORTS ---
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '../firebase'; 
 
 const Checkout = () => {
   const { cartItems, addToCart, removeFromCart, subtotal } = useCart();
@@ -20,6 +24,7 @@ const Checkout = () => {
   
   const [addresses, setAddresses] = useState([]); 
   const [selectedAddressId, setSelectedAddressId] = useState(null); 
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
   
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [newAddress, setNewAddress] = useState({ type: 'Home', text: '', pincode: '' });
@@ -32,15 +37,82 @@ const Checkout = () => {
   // Validation logic
   const isOrderReady = cartItems.length > 0 && (orderType === 'delivery' ? selectedAddressId !== null : selectedTables.length > 0);
 
-  const handleSaveAddress = (e) => {
+  // --- 🟢 NEW: FETCH ADDRESSES FROM FIREBASE ---
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!user?.email) {
+        setIsLoadingAddresses(false);
+        return;
+      }
+      
+      try {
+        const q = query(collection(db, "addresses"), where("userEmail", "==", user.email));
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedAddresses = [];
+        querySnapshot.forEach((doc) => {
+          fetchedAddresses.push({ id: doc.id, ...doc.data() });
+        });
+        
+        setAddresses(fetchedAddresses);
+        
+        // Auto-select the first address if they have one saved
+        if (fetchedAddresses.length > 0 && !selectedAddressId) {
+          setSelectedAddressId(fetchedAddresses[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching addresses from Firebase:", error);
+      } finally {
+        setIsLoadingAddresses(false);
+      }
+    };
+
+    fetchAddresses();
+  }, [user]);
+
+  // --- 🟢 NEW: SAVE ADDRESS TO FIREBASE ---
+  const handleSaveAddress = async (e) => {
     e.preventDefault();
-    const newId = Date.now().toString(); 
-    const addressObject = { id: newId, ...newAddress };
     
-    setAddresses([...addresses, addressObject]); 
-    setSelectedAddressId(newId); 
-    setShowAddressModal(false); 
-    setNewAddress({ type: 'Home', text: '', pincode: '' }); 
+    if (!user?.email) {
+      alert("Please log in to save your address securely.");
+      return;
+    }
+
+    try {
+      // 1. Prepare data with user's email
+      const addressObject = { 
+        ...newAddress,
+        userEmail: user.email,
+        createdAt: new Date().toISOString()
+      };
+      
+      // 2. Save to Firebase "addresses" collection
+      const docRef = await addDoc(collection(db, "addresses"), addressObject);
+      
+      // 3. Update local UI instantly
+      const newAddressWithId = { id: docRef.id, ...addressObject };
+      setAddresses([...addresses, newAddressWithId]); 
+      setSelectedAddressId(docRef.id); 
+      
+      // 4. Close modal and reset
+      setShowAddressModal(false); 
+      setNewAddress({ type: 'Home', text: '', pincode: '' }); 
+      
+    } catch (error) {
+      console.error("Error saving address: ", error);
+      alert("Failed to save address. Please try again.");
+    }
+  };
+
+  const handleIncreaseQty = (item) => {
+    addToCart(item);
+    window.dispatchEvent(new Event('cartUpdated')); 
+  };
+
+  const handleDecreaseQty = (id) => {
+    removeFromCart(id);
+    window.dispatchEvent(new Event('cartUpdated')); 
   };
 
   const handleProceedToPayment = () => {
@@ -58,9 +130,7 @@ const Checkout = () => {
 
   // --- RESTAURANT 9-TABLE LAYOUT ---
   const tables = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
-  // Mock occupied tables (Greyed out)
-  const occupiedTables = ['3', '7'];
+  const occupiedTables = [];
 
   const handleTableClick = (tableId) => {
     if (occupiedTables.includes(tableId)) return;
@@ -162,7 +232,7 @@ const Checkout = () => {
                   <span className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-[#6b75f2] flex items-center justify-center font-bold text-sm border border-indigo-100 dark:border-indigo-500/20">1</span>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Review Items</h2>
                 </div>
-                <Link to="/menu" className="text-[#6b75f2] text-sm font-bold flex items-center gap-1 hover:underline">
+                <Link to="/order" className="text-[#6b75f2] text-sm font-bold flex items-center gap-1 hover:underline">
                   Add More Items <ChevronRight size={16} />
                 </Link>
               </div>
@@ -181,18 +251,18 @@ const Checkout = () => {
                       <p className="text-sm text-gray-400 dark:text-gray-500 mb-4 line-clamp-1">{item.desc}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-1 px-2 border border-gray-100 dark:border-gray-800">
-                          <button onClick={() => removeFromCart(item.id)} className="p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all"><Minus size={14} /></button>
+                          <button onClick={() => handleDecreaseQty(item.id)} className="p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all"><Minus size={14} /></button>
                           <span className="font-bold text-sm w-4 text-center dark:text-white">{item.qty}</span>
-                          <button onClick={() => addToCart(item)} className="p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all"><Plus size={14} /></button>
+                          <button onClick={() => handleIncreaseQty(item)} className="p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all"><Plus size={14} /></button>
                         </div>
-                        <button onClick={() => removeFromCart(item.id)} className="text-rose-500 text-xs font-bold flex items-center gap-1 hover:opacity-80"><Trash2 size={14} /> Remove</button>
+                        <button onClick={() => handleDecreaseQty(item.id)} className="text-rose-500 text-xs font-bold flex items-center gap-1 hover:opacity-80"><Trash2 size={14} /> Remove</button>
                       </div>
                     </div>
                   </div>
                 ))}
                 {cartItems.length === 0 && (
                   <div className="bg-white dark:bg-[#16171d] border border-dashed border-gray-200 dark:border-gray-800 rounded-3xl p-12 text-center text-gray-400 dark:text-gray-500">
-                    Your cart is empty. <Link to="/menu" className="text-[#6b75f2] font-bold hover:underline">Go back to menu</Link>
+                    Your cart is empty. <Link to="/order" className="text-[#6b75f2] font-bold hover:underline">Go back to menu</Link>
                   </div>
                 )}
               </div>
@@ -208,7 +278,10 @@ const Checkout = () => {
 
               {orderType === 'delivery' ? (
                 <div className="grid md:grid-cols-2 gap-4">
-                  {addresses.map((addr) => (
+                  {/* Show loading text if fetching addresses */}
+                  {isLoadingAddresses && <p className="text-sm text-gray-500 col-span-2">Loading saved addresses...</p>}
+                  
+                  {!isLoadingAddresses && addresses.map((addr) => (
                     <div key={addr.id} onClick={() => setSelectedAddressId(addr.id)} className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col ${selectedAddressId === addr.id ? 'border-[#6b75f2] bg-indigo-50/10 dark:bg-indigo-500/10 shadow-sm' : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-[#16171d] hover:border-gray-300 dark:hover:border-gray-700'}`}>
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
@@ -222,17 +295,18 @@ const Checkout = () => {
                       <div className="text-right mt-auto"><button className="text-[#6b75f2] text-[11px] font-bold hover:underline">Edit Details</button></div>
                     </div>
                   ))}
-                  <div onClick={() => setShowAddressModal(true)} className={`p-5 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-white dark:bg-[#16171d] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-700 transition-colors min-h-[140px] ${addresses.length === 0 ? 'md:col-span-2 py-12' : ''}`}>
-                    <PlusCircle size={24} className="text-[#6b75f2] mb-3" />
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Add New Address</span>
-                    {addresses.length === 0 && <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">Please add an address to continue</span>}
-                  </div>
+                  
+                  {!isLoadingAddresses && (
+                    <div onClick={() => setShowAddressModal(true)} className={`p-5 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-white dark:bg-[#16171d] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-700 transition-colors min-h-[140px] ${addresses.length === 0 ? 'md:col-span-2 py-12' : ''}`}>
+                      <PlusCircle size={24} className="text-[#6b75f2] mb-3" />
+                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Add New Address</span>
+                      {addresses.length === 0 && <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">Please add an address to continue</span>}
+                    </div>
+                  )}
                 </div>
               ) : 
               (
                 <div className="bg-white dark:bg-[#16171d] border border-gray-100 dark:border-gray-800 rounded-[32px] p-6 shadow-sm overflow-hidden">
-                  
-                  {/* Legend */}
                   <div className="flex justify-center gap-6 mb-8 pt-4 pb-6 border-b border-gray-50 dark:border-gray-800">
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <div className="w-4 h-4 rounded border-2 border-[#6b75f2] bg-white dark:bg-transparent"></div> Available
@@ -245,7 +319,6 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {/* 3x3 Table Grid */}
                   <div className="flex justify-center pb-6">
                     <div className="grid grid-cols-3 gap-4 md:gap-6">
                       {tables.map((tableId) => {
@@ -309,7 +382,6 @@ const Checkout = () => {
                   <span className="font-bold text-gray-900 dark:text-white">₹{packagingCharges}</span>
                 </div>
                 
-                {/* Show selected tables in summary if Dine-In */}
                 {orderType === 'dine-in' && selectedTables.length > 0 && (
                   <div className="flex justify-between text-sm text-[#6b75f2] bg-indigo-50 dark:bg-indigo-500/10 p-3 rounded-xl mt-4">
                     <span className="font-bold">Table(s) Selected</span>
@@ -324,7 +396,6 @@ const Checkout = () => {
                 </div>
               </div>
 
-              {/* ROUTE TO PAYMENT PAGE */}
               <button 
                 onClick={handleProceedToPayment}
                 disabled={!isOrderReady}

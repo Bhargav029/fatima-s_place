@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { 
   CreditCard, Smartphone, Wallet, Truck, Globe, 
@@ -31,6 +31,7 @@ const Payment = () => {
 
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
+  const hasTriggered = useRef(false);
 
   if (!location.state) {
     return <Navigate to="/checkout" replace />;
@@ -40,6 +41,19 @@ const Payment = () => {
   const packagingCharges = subtotal > 0 ? 20 : 0;
   const deliveryFee = orderType === 'dine-in' ? 0 : (subtotal > 1500 ? 0 : (subtotal > 0 ? 45 : 0));
   const finalTotal = subtotal + gst + deliveryFee + packagingCharges;
+
+  // --- AUTO-TRIGGER RAZORPAY ---
+  useEffect(() => {
+    if (paymentMethod !== 'cod' && !hasTriggered.current) {
+      handleCompletePayment();
+      hasTriggered.current = true;
+    }
+  }, [paymentMethod]);
+
+  const handleMethodChange = (method) => {
+    hasTriggered.current = false; 
+    setPaymentMethod(method);
+  };
 
   const saveOrderToFirebase = async (orderData) => {
     try {
@@ -55,11 +69,18 @@ const Payment = () => {
 
   const handleCompletePayment = async (e) => {
     if (e) e.preventDefault();
-    setIsProcessing(true);
+    if (isProcessing) return;
+
+    // --- ADD THIS SAFETY CHECK ---
+    if (finalTotal <= 0) {
+      alert("Your cart is empty! Please add items before paying.");
+      return;
+    }
 
     const orderData = {
       id: `F-${Math.floor(10000 + Math.random() * 90000)}`, 
       customer: user?.name || 'Guest Customer',
+      userEmail: user?.email || 'guest@example.com',
       items: `${cartItems.length} items`,
       status: 'Pending',
       amount: `₹${finalTotal}`,
@@ -87,8 +108,7 @@ const Payment = () => {
     }
 
     try {
-      // 🟢 CORRECT URL WITH /api/
-     const createOrderUrl = `${import.meta.env.VITE_API_URL}/payment.php?action=create_order`;
+      const createOrderUrl = `${import.meta.env.VITE_API_URL}/payment.php?action=create_order`;
 
       const fetchOrder = await fetch(createOrderUrl, {
         method: 'POST',
@@ -106,11 +126,11 @@ const Payment = () => {
       try {
         order = JSON.parse(textResponse);
       } catch (parseError) {
-        throw new Error(`Server did not return valid JSON.\nWhat it returned instead:\n\n${textResponse.substring(0, 150)}...`);
+        throw new Error(`Server did not return valid JSON.\nDetails:\n${textResponse.substring(0, 150)}...`);
       }
 
       const options = {
-        key: 'rzp_live_SYAJaSHaJcjETB', 
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
         amount: order.amount,
         currency: "INR",
         name: "Fatima's Place",
@@ -129,8 +149,7 @@ const Payment = () => {
 
         handler: async function (response) {
           try {
-            // 🟢 FIXED URL: Added /api/ here as well!
-            const verifyPaymentUrl = 'http://localhost/api/payment.php?action=verify_payment';
+            const verifyPaymentUrl = `${import.meta.env.VITE_API_URL}/payment.php?action=verify_payment`;
 
             const verifyRes = await fetch(verifyPaymentUrl, {
               method: 'POST',
@@ -164,6 +183,7 @@ const Payment = () => {
         modal: {
           ondismiss: function() {
             setIsProcessing(false); 
+            hasTriggered.current = false; 
           }
         }
       };
@@ -173,14 +193,16 @@ const Payment = () => {
       paymentObject.on('payment.failed', function (response) {
         alert(`Razorpay Gateway Error: ${response.error.description}`);
         setIsProcessing(false);
+        hasTriggered.current = false;
       });
       
       paymentObject.open();
 
     } catch (error) {
-      alert(`🚨 CRITICAL ERROR DETECTED:\n\n${error.message}\n\n(Check your console for more details)`);
+      alert(`🚨 CRITICAL ERROR DETECTED:\n\n${error.message}`);
       console.error("Payment setup failed:", error);
       setIsProcessing(false);
+      hasTriggered.current = false;
     }
   };
 
@@ -236,7 +258,7 @@ const Payment = () => {
             ].map((method) => (
               <button 
                 key={method.id}
-                onClick={() => setPaymentMethod(method.id)}
+                onClick={() => handleMethodChange(method.id)}
                 className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold text-sm transition-all border ${
                   paymentMethod === method.id 
                     ? 'bg-white border-[#6b75f2] text-[#6b75f2] shadow-sm' 
@@ -251,71 +273,40 @@ const Payment = () => {
             ))}
           </div>
 
-          {/* Middle Column: Payment Forms */}
+          {/* Middle Column: Payment Gateway UI */}
           <div className="flex-1">
-            {paymentMethod === 'card' && (
-              <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm">
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">Card Information</h2>
-                    <p className="text-sm text-gray-500">Safe and secure credit or debit card entry.</p>
+            <div className="bg-white border border-gray-100 rounded-[32px] p-12 shadow-sm text-center min-h-[300px] flex flex-col justify-center">
+              {isProcessing && paymentMethod !== 'cod' ? (
+                <div className="animate-pulse">
+                  <div className="w-16 h-16 bg-indigo-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <Lock className="text-[#6b75f2]" size={32} />
                   </div>
-                  <Lock size={20} className="text-gray-400 hidden sm:block" />
+                  <h2 className="text-xl font-bold text-gray-900">Securely connecting to Razorpay...</h2>
+                  <p className="text-gray-500 mt-2">Please do not refresh the page.</p>
                 </div>
-
-                <form onSubmit={handleCompletePayment} className="space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700">Card Number</label>
-                    <div className="relative">
-                      <input type="text" placeholder="0000 0000 0000 0000" required maxLength="19" className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-16 py-3.5 text-sm font-medium focus:border-[#6b75f2] focus:bg-white outline-none transition-colors" />
-                      <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    </div>
+              ) : (
+                <>
+                  <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-[#6b75f2]">
+                    {paymentMethod === 'upi' ? <Smartphone size={32}/> : paymentMethod === 'wallet' ? <Wallet size={32}/> : paymentMethod === 'card' ? <CreditCard size={32}/> : <Truck size={32}/>}
                   </div>
-
-                  <div className="grid grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-700">Expiry Date</label>
-                      <input type="text" placeholder="MM / YY" required maxLength="5" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:border-[#6b75f2] focus:bg-white outline-none transition-colors" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-700 flex items-center gap-1">CVV <Info size={12} className="text-gray-400"/></label>
-                      <div className="relative">
-                        <input type="password" placeholder="•••" required maxLength="4" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:border-[#6b75f2] focus:bg-white outline-none transition-colors" />
-                        <Lock size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700">Cardholder Name</label>
-                    <input type="text" placeholder={user?.name?.toUpperCase() || "CARDHOLDER NAME"} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium uppercase focus:border-[#6b75f2] focus:bg-white outline-none transition-colors" />
-                  </div>
-
-                  <div className="pt-8">
-                    <button type="submit" disabled={isProcessing} className="w-full bg-[#6b75f2] text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#5a64e1] disabled:opacity-70 transition-all flex justify-center items-center gap-2">
-                      {isProcessing ? "Processing Secure Payment..." : `Pay ₹${finalTotal}`}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {paymentMethod !== 'card' && (
-              <div className="bg-white border border-gray-100 rounded-[32px] p-12 shadow-sm text-center">
-                <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-[#6b75f2]">
-                  {paymentMethod === 'upi' ? <Smartphone size={32}/> : paymentMethod === 'wallet' ? <Wallet size={32}/> : <Truck size={32}/>}
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {paymentMethod === 'upi' ? 'Pay via UPI' : paymentMethod === 'wallet' ? 'Pay via Wallet' : 'Pay on Arrival'}
-                </h2>
-                <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-                  {paymentMethod === 'cod' ? 'You will pay the server or delivery executive when your food arrives.' : 'Complete the payment using the secure Razorpay gateway.'}
-                </p>
-                <button onClick={handleCompletePayment} disabled={isProcessing} className="bg-[#6b75f2] text-white px-10 py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#5a64e1] disabled:opacity-70 transition-all w-full sm:w-auto">
-                  {isProcessing ? "Processing..." : (paymentMethod === 'cod' ? `Confirm Order for ₹${finalTotal}` : `Proceed to Pay ₹${finalTotal}`)}
-                </button>
-              </div>
-            )}
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    {paymentMethod === 'cod' ? 'Pay on Arrival' : 'Online Payment'}
+                  </h2>
+                  <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+                    {paymentMethod === 'cod' 
+                      ? 'You will pay the server or delivery executive when your food arrives.' 
+                      : 'Click below if the secure Razorpay gateway did not open automatically.'}
+                  </p>
+                  <button 
+                    onClick={handleCompletePayment} 
+                    disabled={isProcessing} 
+                    className="bg-[#6b75f2] text-white px-10 py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#5a64e1] disabled:opacity-70 transition-all mx-auto block w-full sm:w-auto"
+                  >
+                    {paymentMethod === 'cod' ? `Confirm Order for ₹${finalTotal}` : `Open Payment Gateway`}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Right Column: Order Summary */}
